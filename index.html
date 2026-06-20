@@ -1,696 +1,1073 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- SEO Meta Tags -->
-    <title>أداة إزالة وخلفيات الصور ذكياً - bg.very.ly</title>
-    <meta name="description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة عبر ذكاء الغيمة الاصطناعي بشكل آمن تماماً وبأعلى جودة لعام 2026.">
-    <meta name="robots" content="index, follow">
-    <meta property="og:title" content="أداة إزالة وخلفيات الصور ذكياً - bg.very.ly">
-    <meta property="og:description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة عبر ذكاء الغيمة الاصطناعي بشكل آمن تماماً وبأعلى جودة لعام 2026.">
-    <meta property="og:type" content="website">
-    
-    <!-- Favicon to prevent 404 error -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🟢</text></svg>">
-
-    <!-- Google Fonts (Cairo & Plus Jakarta Sans) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS v4 -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
-    <style type="text/tailwindcss">
-        @theme {
-            --color-brand-primary: #10b981; /* Emerald */
-            --color-brand-secondary: #84cc16; /* Olive/Lime */
-            --color-dark-bg: #090d16;
-            --color-dark-card: #111827;
-            --color-light-bg: #f8fafc;
-            --color-light-card: #ffffff;
-        }
-
+    <title>QuantumCut - Interactive Segmentation Engine</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
         body {
-            font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
         }
 
-        /* Checkerboard background for transparent image preview */
-        .checkerboard {
-            background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
-                              linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
-                              linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
-                              linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Pulsing Seed Points CSS */
+        @keyframes pulse-green {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1.2); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.2); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        
+        .seed-point {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 30;
+            border: 2px solid white;
+            transition: all 0.2s ease;
+        }
+        .seed-fg {
+            background-color: #22c55e;
+            animation: pulse-green 1.8s infinite;
+        }
+        .seed-bg {
+            background-color: #ef4444;
+            animation: pulse-red 1.8s infinite;
+        }
+
+        /* Grid Pattern Background */
+        .bg-grid {
             background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         }
-        .dark .checkerboard {
-            background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%),
-                              linear-gradient(-45deg, #1e293b 25%, transparent 25%),
-                              linear-gradient(45deg, transparent 75%, #1e293b 75%),
-                              linear-gradient(-45deg, transparent 75%, #1e293b 75%);
-        }
-
-        /* Ambient glow effects */
-        .glow-sphere {
-            filter: blur(120px);
-            opacity: 0.15;
-            transition: opacity 0.5s ease;
-        }
-        .dark .glow-sphere {
-            opacity: 0.3;
+        .bg-transparent-grid {
+            background-size: 15px 15px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+                              linear-gradient(to right, rgba(0, 0, 0, 0.2) 1px, transparent 1px);
+            background-color: #1e293b;
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300 relative overflow-x-hidden">
+<body class="h-screen flex flex-col overflow-hidden bg-grid">
 
-    <!-- Background Ambient Glows -->
-    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500 glow-sphere pointer-events-none z-0"></div>
-    <div class="absolute bottom-[20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-lime-500 glow-sphere pointer-events-none z-0"></div>
+    <!-- Loading Screen Overlay (Until OpenCV.js is fully loaded) -->
+    <div id="loader-overlay" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center transition-all duration-500">
+        <div class="relative flex items-center justify-center mb-6">
+            <div class="w-24 h-24 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
+            <i data-lucide="cpu" class="w-10 h-10 text-emerald-400 absolute animate-pulse"></i>
+        </div>
+        <h2 class="text-2xl font-bold tracking-wider text-slate-100 mb-2">Initializing OpenCV.js Engine</h2>
+        <p class="text-slate-400 text-sm max-w-md text-center px-4 leading-relaxed">
+            Loading real-time mathematical computer vision libraries directly into your browser memory. This might take a few seconds...
+        </p>
+        <div class="mt-8 w-64 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full animate-[progress_15s_ease-in-out_infinite]" style="width: 85%;"></div>
+        </div>
+    </div>
 
-    <!-- Header Section -->
-    <header class="border-b border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md sticky top-0 z-40 transition-colors duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <!-- Logo & Brand -->
-            <a href="/" class="flex items-center gap-3 group" aria-label="الصفحة الرئيسية">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-lime-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.24 15.24a8 8 0 11-11.29-11.29 8 8 0 0111.29 11.29zm0 0l4.76 4.76" />
-                    </svg>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">bg.very.ly</span>
-                    <span class="text-[10px] text-emerald-500 font-semibold tracking-widest uppercase">BG REMOVER</span>
-                </div>
-            </a>
-
-            <!-- Navigation Actions -->
-            <div class="flex items-center gap-3 sm:gap-4">
-                <button onclick="openModal('about-modal')" class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50" aria-label="عن الأداة">عن الأداة</button>
-                <button onclick="openModal('privacy-modal')" class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50" aria-label="سياسة الخصوصية">الخصوصية</button>
-                
-                <!-- Divider -->
-                <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
-
-                <!-- Theme Toggle Button -->
-                <button id="theme-toggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 hover:scale-105 transition-all" aria-label="تغيير المظهر">
-                    <!-- Sun Icon -->
-                    <svg id="theme-sun" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
-                    </svg>
-                    <!-- Moon Icon -->
-                    <svg id="theme-moon" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                </button>
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex items-center justify-between z-40">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-emerald-500 to-teal-400 p-2 rounded-xl shadow-lg shadow-emerald-500/20">
+                <i data-lucide="scissors" class="w-6 h-6 text-slate-950"></i>
             </div>
+            <div>
+                <h1 class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">QuantumCut</h1>
+                <p class="text-xs text-slate-400 font-medium">Interactive Mathematical Segmentation Engine</p>
+            </div>
+        </div>
+        
+        <!-- Engine Status -->
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-semibold text-slate-300" id="opencv-status">OpenCV.js Loaded</span>
+            </div>
+            <a href="https://github.com" target="_blank" class="text-slate-400 hover:text-white transition-colors">
+                <i data-lucide="github" class="w-5 h-5"></i>
+            </a>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main id="main-content" class="flex-grow z-10">
+    <!-- Main Workspace Dashboard -->
+    <div class="flex-1 flex overflow-hidden">
         
-        <!-- Hero & Title Section -->
-        <section class="max-w-4xl mx-auto px-4 pt-12 pb-6 text-center">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mb-6 animate-pulse">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                ذكاء اصطناعي سحابي فوري - خصوصية وأمان
-            </div>
-            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6">
-                احذف خلفية الصور <br class="hidden sm:inline">
-                <span class="bg-gradient-to-r from-emerald-500 to-lime-400 bg-clip-text text-transparent">بضغطة زر واحدة مجاناً</span>
-            </h1>
-            <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                قم بعزل العناصر والأشخاص بدقة فائقة عبر خوادم Cloudflare فائقة السرعة. معالجة آمنة وفورية بالكامل باستخدام نموذج Bria RMBG المتطور.
-            </p>
-        </section>
-
-        <!-- Main Workspace (Dropzone, Progress, Result Showcase) -->
-        <section class="max-w-5xl mx-auto px-4 py-8">
-            <div class="bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl transition-all duration-300">
+        <!-- Left Sidebar: Controls & Settings -->
+        <aside class="w-80 border-r border-slate-800 bg-slate-900/50 flex flex-col overflow-y-auto">
+            
+            <!-- Section: Image Input -->
+            <div class="p-5 border-b border-slate-800">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                    <i data-lucide="image" class="w-4 h-4 text-emerald-400"></i> Image Source
+                </h3>
                 
-                <!-- 1. Dropzone Area -->
-                <div id="dropzone-container" class="block">
-                    <div id="dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500/80 rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-950/30 group relative overflow-hidden">
-                        <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*">
-                        
-                        <div class="relative z-0 pointer-events-none flex flex-col items-center">
-                            <!-- Cloud/Upload SVG Icon -->
-                            <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 dark:text-slate-600 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:scale-110 transition-all duration-300 mb-5 border border-slate-200/50 dark:border-slate-800/50">
-                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg>
-                            </div>
-                            <h3 class="text-lg sm:text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">اسحب صورتك هنا أو تصفح ملفاتك</h3>
-                            <p class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-6">يدعم صيغ PNG, JPG, WebP (حتى 15 ميجابايت)</p>
-                            
-                            <span class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-lime-500 text-white font-semibold text-sm shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/30 transition-all">اختيار صورة</span>
-                        </div>
+                <label class="group relative flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl cursor-pointer bg-slate-950/40 hover:bg-slate-950/80 transition-all duration-300 overflow-hidden">
+                    <input type="file" id="file-upload" accept="image/*" class="hidden" />
+                    <div class="flex flex-col items-center justify-center text-center p-4">
+                        <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 group-hover:text-emerald-400 transition-colors mb-2"></i>
+                        <span class="text-xs font-semibold text-slate-300 group-hover:text-emerald-300 transition-colors">Upload Custom Image</span>
+                        <span class="text-[10px] text-slate-500 mt-1">PNG, JPG up to 10MB</span>
                     </div>
+                </label>
 
-                    <!-- Quick Sample Testing -->
-                    <div class="mt-8 text-center">
-                        <p class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-3">أو جرب إحدى هذه العينات السريعة:</p>
-                        <div class="flex justify-center gap-4 flex-wrap">
-                            <button onclick="loadSample('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80')" class="flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/10 border border-slate-200/60 dark:border-slate-700/30 transition-all group text-right">
-                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-500">بورتريه شخصي</span>
-                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80" class="w-8 h-8 rounded-lg object-cover" alt="عينة بورتريه" width="32" height="32">
-                            </button>
-                            <button onclick="loadSample('https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80')" class="flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/10 border border-slate-200/60 dark:border-slate-700/30 transition-all group text-right">
-                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-500">منتج وحذاء</span>
-                                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=80&h=80&q=80" class="w-8 h-8 rounded-lg object-cover" alt="عينة منتج" width="32" height="32">
-                            </button>
-                            <button onclick="loadSample('https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80')" class="flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/10 border border-slate-200/60 dark:border-slate-700/30 transition-all group text-right">
-                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-500">حيوان أليف</span>
-                                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=80&h=80&q=80" class="w-8 h-8 rounded-lg object-cover" alt="عينة حيوان" width="32" height="32">
-                            </button>
-                        </div>
-                    </div>
+                <button id="btn-preset" class="w-full mt-3 py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/50 hover:border-slate-600 text-xs font-semibold text-slate-200 transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i> Generate Demo Object
+                </button>
+            </div>
+
+            <!-- Section: Interaction Mode (Seeds) -->
+            <div class="p-5 border-b border-slate-800">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                    <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-emerald-400"></i> Interactive Tools
+                </h3>
+                
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <button id="tool-fg" class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 transition-all duration-200">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 mb-2 shadow-lg shadow-emerald-500/50"></span>
+                        <span class="text-[11px] font-bold">Foreground</span>
+                        <span class="text-[9px] text-emerald-500/80 mt-0.5">Keep Object</span>
+                    </button>
+                    <button id="tool-bg" class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-transparent bg-slate-950/40 hover:bg-slate-800/50 text-slate-400 hover:text-slate-200 transition-all duration-200">
+                        <span class="w-3 h-3 rounded-full bg-red-500 mb-2 shadow-lg shadow-red-500/50"></span>
+                        <span class="text-[11px] font-bold">Background</span>
+                        <span class="text-[9px] text-slate-500 mt-0.5">Remove Area</span>
+                    </button>
                 </div>
 
-                <!-- 2. Active AI Processing State -->
-                <div id="processing-container" class="hidden py-12 flex flex-col items-center justify-center text-center">
-                    <div class="relative w-24 h-24 mb-6">
-                        <!-- Dual Ring Pulse Animation -->
-                        <div class="absolute inset-0 rounded-full border-4 border-emerald-500/20 animate-ping"></div>
-                        <div class="absolute inset-2 rounded-full border-4 border-t-emerald-500 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <svg class="w-8 h-8 text-emerald-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.904-4.473L21 9l-3.482-3.482-7.705 7.705z" />
-                            </svg>
-                        </div>
+                <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80">
+                    <p class="text-[11px] text-slate-400 leading-relaxed flex gap-2">
+                        <i data-lucide="info" class="w-4 h-4 text-emerald-500 shrink-0"></i>
+                        <span>Click on the image to place seed points. <b>Green</b> indicates the object. <b>Red</b> explicitly marks the background.</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Section: Algorithm Settings -->
+            <div class="p-5 flex-1 space-y-5">
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                        <i data-lucide="settings" class="w-4 h-4 text-emerald-400"></i> Engine Settings
+                    </h3>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Segmentation Method</label>
+                    <select id="algo-select" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-lg py-2 px-3 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <option value="grabcut">GrabCut (Iterative Energy Minimization)</option>
+                        <option value="color">Color Intensity Distance (Real-time)</option>
+                    </select>
+                </div>
+
+                <!-- GrabCut Iterations Slider -->
+                <div id="grabcut-settings">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-semibold text-slate-400">GrabCut Iterations</label>
+                        <span id="iter-val" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">3</span>
                     </div>
+                    <input type="range" id="iter-slider" min="1" max="8" value="3" class="w-full accent-emerald-500 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1">Higher values improve boundary accuracy but require more computational power.</p>
+                </div>
+
+                <!-- Color Distance Tolerance Slider (Hidden by default) -->
+                <div id="color-settings" class="hidden">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-semibold text-slate-400">Color Tolerance</label>
+                        <span id="tolerance-val" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">45</span>
+                    </div>
+                    <input type="range" id="tolerance-slider" min="10" max="150" value="45" class="w-full accent-emerald-500 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1">Controls the mathematical color distance allowed to match the selected seeds.</p>
+                </div>
+
+                <!-- Boundary Feathering -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-semibold text-slate-400">Edge Smoothing (Feather)</label>
+                        <span id="feather-val" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">1 px</span>
+                    </div>
+                    <input type="range" id="feather-slider" min="0" max="10" value="1" class="w-full accent-emerald-500 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Bottom: Action Panel -->
+            <div class="p-5 border-t border-slate-800 bg-slate-950/40 space-y-2">
+                <button id="btn-process" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs tracking-wider uppercase shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25 transition-all duration-200 flex items-center justify-center gap-2">
+                    <i data-lucide="play" class="w-4 h-4 fill-current"></i> Process Segmentation
+                </button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btn-clear" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear Seeds
+                    </button>
+                    <button id="btn-reset" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset All
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Workspace: Interactive Canvas -->
+        <main class="flex-1 flex flex-col overflow-hidden bg-slate-950">
+            <!-- Workspace Toolbar -->
+            <div class="h-12 border-b border-slate-900 bg-slate-900/40 px-6 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-xs text-slate-400">
+                    <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+                    <span class="font-semibold text-slate-300">Workspace Canvas</span>
+                    <span class="text-slate-600">|</span>
+                    <span id="canvas-resolution">No image loaded</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Workspace background opacity slider -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] text-slate-400">Image Opacity</span>
+                        <input type="range" id="bg-opacity-slider" min="10" max="100" value="100" class="w-20 accent-emerald-500 bg-slate-800 rounded-lg appearance-none h-1 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="flex-1 overflow-auto p-8 flex items-center justify-center relative bg-grid">
+                <div id="canvas-wrapper" class="relative shadow-2xl rounded-xl overflow-hidden border border-slate-800 max-w-full max-h-full transition-all duration-300" style="display: none;">
+                    <!-- Raw Image Canvas (Underlay) -->
+                    <canvas id="canvas-input" class="block max-w-full max-h-[70vh]"></canvas>
                     
-                    <h4 id="status-text" class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-3">جاري معالجة الصورة عبر ذكاء الغيمة الاصطناعي...</h4>
-                    <p class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 max-w-md mb-6 leading-relaxed">
-                        يتم الآن إرسال الصورة بشكل آمن ومعالجتها فورياً باستخدام نموذج Bria RMBG المتطور على شبكة Cloudflare السحابية.
-                    </p>
-
-                    <!-- Custom Progress Bar -->
-                    <div class="w-full max-w-md bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700/50">
-                        <div id="progress-bar" class="bg-gradient-to-r from-emerald-500 to-lime-400 h-full rounded-full transition-all duration-300" style="width: 5%"></div>
-                    </div>
-                    <span id="progress-percentage" class="text-xs font-bold text-emerald-500 mt-2">5%</span>
+                    <!-- Interactive Seed Point Overlay Container -->
+                    <div id="seed-container" class="absolute inset-0 z-20 cursor-crosshair"></div>
+                    
+                    <!-- Visual Bounding Box Indicator (GrabCut ROI) -->
+                    <div id="roi-box" class="absolute border-2 border-dashed border-emerald-400/40 pointer-events-none z-10 hidden"></div>
                 </div>
 
-                <!-- 3. Result Showcase (Comparison Slider + Actions) -->
-                <div id="result-container" class="hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                        
-                        <!-- Interactive Comparison Slider (Left Side / Large) -->
-                        <div class="lg:col-span-8">
-                            <div id="slider-container" class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800/80 cursor-ew-resize select-none">
-                                
-                                <!-- Processed Image (Underlay/Transparent Background) -->
-                                <div class="absolute inset-0 w-full h-full checkerboard flex items-center justify-center">
-                                    <img id="processed-image" class="w-full h-full object-contain" alt="الصورة بدون خلفية">
-                                </div>
-
-                                <!-- Original Image Wrapper (Overlay/Clipped) -->
-                                <div id="slider-original-wrap" class="absolute inset-y-0 right-0 left-1/2 overflow-hidden border-l-2 border-emerald-500">
-                                    <div class="absolute inset-0 w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-900">
-                                        <img id="original-image" class="w-full h-full object-contain" alt="الصورة الأصلية">
-                                    </div>
-                                </div>
-
-                                <!-- Slider Handle/Divider Line -->
-                                <div id="slider-handle" class="absolute inset-y-0 left-1/2 -ml-3.5 w-7 flex items-center justify-center pointer-events-none z-20">
-                                    <div class="h-full w-0.5 bg-emerald-500 shadow-lg"></div>
-                                    <div class="absolute w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md border-2 border-white dark:border-slate-900">
-                                        <svg class="w-4 h-4 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <!-- Badges -->
-                                <span class="absolute top-4 right-4 z-30 bg-slate-900/80 text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider">الأصلية</span>
-                                <span class="absolute top-4 left-4 z-30 bg-emerald-500/90 text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider">المعزولة</span>
-                            </div>
-                            <p class="text-xs text-center text-slate-400 dark:text-slate-500 mt-3">اسحب المقبض يميناً ويساراً لمقارنة النتائج بدقة</p>
-                        </div>
-
-                        <!-- Action Controls (Right Side / Sidebar) -->
-                        <div class="lg:col-span-4 flex flex-col gap-4">
-                            <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/60">
-                                <h5 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-2">تم عزل الخلفية بنجاح!</h5>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-                                    تمت معالجة الصورة عبر ذكاء الغيمة الاصطناعي بجودة كاملة وبصيغة PNG شفافة ومستعدة للتحميل المباشر.
-                                </p>
-                                
-                                <div class="space-y-2">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-slate-400">صيغة الملف:</span>
-                                        <span class="font-bold text-emerald-500">PNG (شفاف)</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-slate-400">الأمان والخصوصية:</span>
-                                        <span class="font-bold text-emerald-500">مشفر وآمن</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Download Button -->
-                            <a id="download-btn" href="#" download="transparent.png" class="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-lime-500 text-white font-bold text-base shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all text-center">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                تحميل الصورة المعزولة (Download PNG)
-                            </a>
-
-                            <!-- Reset Button -->
-                            <button onclick="resetWorkspace()" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-all">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 12H16" />
-                                </svg>
-                                اختيار صورة أخرى
-                            </button>
-                        </div>
-
+                <!-- Empty State -->
+                <div id="empty-state" class="flex flex-col items-center justify-center text-center max-w-sm p-6">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-4 text-emerald-400 shadow-xl">
+                        <i data-lucide="image" class="w-8 h-8"></i>
                     </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- Features Grid Section -->
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <h2 class="text-2xl sm:text-3xl font-extrabold mb-4">لماذا تختار bg.very.ly لمعالجة صورك؟</h2>
-                <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400">نحن نجمع بين القوة المطلقة للذكاء الاصطناعي السحابي والأمان الفائق للعمليات دون أي تخزين لملفاتك.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-emerald-500 mb-6 border border-emerald-500/20">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-3">خصوصية وأمان 100%</h3>
-                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        تتم معالجة جميع صورك بشكل آمن عبر قنوات مشفرة. لا يتم تخزين أي صورة على خوادمنا، حيث يتم حذفها فوراً بمجرد انتهاء عملية العزل وإرسال النتيجة إليك.
-                    </p>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-emerald-500 mb-6 border border-emerald-500/20">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-3">سرعة فائقة بالذكاء الاصطناعي</h3>
-                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        نستخدم أحدث تقنيات Cloudflare Worker AI لتشغيل خوارزميات الذكاء الاصطناعي المتطورة Bria RMBG على خوادم سحابية قريبة منك لأداء فوري وسلس للغاية.
-                    </p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-emerald-500 mb-6 border border-emerald-500/20">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-3">جودة عالية الدقة مجاناً</h3>
-                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        لا داعي لدفع اشتراكات مكلفة أو استخدام أدوات تضع علامات مائية على صورك. احصل على شفافية كاملة وحواف نظيفة لصورك الشخصية أو منتجات متجرك الإلكتروني مجاناً وبأعلى دقة.
+                    <h3 class="text-base font-bold text-slate-200 mb-1">No Image Loaded</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                        Upload a photo from your computer or click "Generate Demo Object" to load a dynamic test canvas directly.
                     </p>
                 </div>
             </div>
-        </section>
+        </main>
 
-    </main>
+        <!-- Right Sidebar: Output & Analytics -->
+        <aside class="w-80 border-l border-slate-800 bg-slate-900/50 flex flex-col overflow-y-auto">
+            
+            <!-- Section: Transparent Output -->
+            <div class="p-5 border-b border-slate-800">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i> Segmented Output
+                    </span>
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-mono">Alpha PNG</span>
+                </h3>
 
-    <!-- Deep Corporate Footer -->
-    <footer class="bg-slate-100 dark:bg-[#070a11] border-t border-slate-200 dark:border-slate-900 z-10 transition-colors duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-                
-                <!-- Brand Info (Left/Right depending on RTL) -->
-                <div class="md:col-span-5 flex flex-col gap-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-500 to-lime-400 flex items-center justify-center text-white font-bold">bg</div>
-                        <span class="text-lg font-bold text-slate-900 dark:text-white">bg.very.ly</span>
-                    </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">
-                        أداة متطورة لمعالجة وعزل خلفيات الصور بأمان تام وخصوصية مطلقة عبر ذكاء الغيمة الاصطناعي دون تخزين أي بيانات.
-                    </p>
-                </div>
-
-                <!-- Footer Links -->
-                <div class="md:col-span-4 flex gap-8">
-                    <div>
-                        <h6 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">الروابط السريعة</h6>
-                        <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
-                            <li><button onclick="openModal('about-modal')" class="hover:text-emerald-500 transition-colors">عن الأداة</button></li>
-                            <li><button onclick="openModal('privacy-modal')" class="hover:text-emerald-500 transition-colors">سياسة الخصوصية والأمان</button></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h6 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">المشروع</h6>
-                        <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
-                            <li><a href="https://github.com/veryly/very.ly-bg-remover" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-500 transition-colors">مستودع GitHub</a></li>
-                            <li><a href="https://very.ly" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-500 transition-colors">شبكة very.ly</a></li>
-                        </ul>
+                <div class="relative w-full aspect-square rounded-xl overflow-hidden border border-slate-800 bg-transparent-grid flex items-center justify-center">
+                    <canvas id="canvas-output" class="max-w-full max-h-full object-contain"></canvas>
+                    <div id="output-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-slate-950/40">
+                        <i data-lucide="layers" class="w-8 h-8 text-slate-600 mb-2"></i>
+                        <span class="text-xs font-semibold text-slate-500">Awaiting processing...</span>
                     </div>
                 </div>
 
-                <!-- Copyright Info -->
-                <div class="md:col-span-3 text-left md:text-left text-xs text-slate-500 dark:text-slate-400 flex flex-col gap-2">
-                    <span>جميع الحقوق محفوظة © 2026 bg.very.ly</span>
-                    <span>تطوير وتشغيل آمن بواسطة <a href="https://very.ly" target="_blank" rel="noopener noreferrer" class="text-emerald-500 hover:underline">very.ly</a></span>
-                </div>
-
+                <button id="btn-download" disabled class="w-full mt-4 py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-700/50 text-xs font-bold text-slate-200 transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i> Export Alpha Channel PNG
+                </button>
             </div>
-        </div>
-    </footer>
 
-    <!-- ABOUT MODAL -->
-    <div id="about-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="closeModal('about-modal')"></div>
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 relative z-10 shadow-2xl transition-all">
-            <button onclick="closeModal('about-modal')" class="absolute top-4 left-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="إغلاق">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">عن أداة bg.very.ly</h3>
-            <div class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                <p>
-                    تعتبر أداة <strong>bg.very.ly</strong> حلاً مبتكراً واحترافياً لإزالة خلفيات الصور وعزل العناصر والأشخاص بدقة استثنائية وبشكل مجاني تماماً.
-                </p>
-                <p>
-                    تتصل هذه الأداة بواجهة برمجة تطبيقات Cloudflare Worker AI مخصصة لإزالة خلفيات الصور فورياً باستخدام نموذج الذكاء الاصطناعي المتطور <strong>@cf/briaai/bria-rmbg</strong>.
-                </p>
-                <p>
-                    هذا يعني معالجة فائقة السرعة وعالية الدقة دون استهلاك موارد جهازك الشخصي، مع الحفاظ الكامل على جودة الصورة الأصلية وتوفيرها بصيغة PNG شفافة جاهزة للاستخدام المباشر.
-                </p>
+            <!-- Section: Engine Analytics -->
+            <div class="p-5 space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-400"></i> Engine Metrics
+                </h3>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3">
+                        <span class="text-[10px] text-slate-500 block font-semibold">Execution Time</span>
+                        <span id="metric-time" class="text-sm font-extrabold text-slate-200 font-mono">0.00 ms</span>
+                    </div>
+                    <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3">
+                        <span class="text-[10px] text-slate-500 block font-semibold">Seeds Placed</span>
+                        <span id="metric-seeds" class="text-sm font-extrabold text-slate-200 font-mono">0 (0 / 0)</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400">Bounding Box (ROI)</span>
+                        <span id="metric-roi" class="font-mono text-slate-300">0 x 0 px</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400">Image Dimensions</span>
+                        <span id="metric-resolution" class="font-mono text-slate-300">0 x 0 px</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400">Active Math Engine</span>
+                        <span id="metric-engine" class="font-mono text-emerald-400 font-semibold">GrabCut CPU</span>
+                    </div>
+                </div>
+
+                <!-- Custom Color Distribution Visualization -->
+                <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3">
+                    <span class="text-[10px] text-slate-500 block font-semibold mb-2">Workspace Color Profile</span>
+                    <div class="flex h-3 rounded overflow-hidden" id="color-profile-bar">
+                        <div class="flex-1 bg-emerald-500"></div>
+                        <div class="flex-1 bg-teal-500"></div>
+                        <div class="flex-1 bg-cyan-500"></div>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-slate-500 mt-1.5">
+                        <span>Object Dominant</span>
+                        <span>Background</span>
+                    </div>
+                </div>
             </div>
-            <button onclick="closeModal('about-modal')" class="mt-6 w-full py-2.5 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors">فهمت ذلك</button>
-        </div>
+        </aside>
     </div>
 
-    <!-- PRIVACY MODAL -->
-    <div id="privacy-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="closeModal('privacy-modal')"></div>
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 relative z-10 shadow-2xl transition-all">
-            <button onclick="closeModal('privacy-modal')" class="absolute top-4 left-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="إغلاق">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">سياسة الخصوصية والأمان</h3>
-            <div class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                <div class="p-3 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-                    تعهد الخصوصية: "يتم نقل صورك عبر قنوات مشفرة آمنة، ولا يتم تخزينها أو الاحتفاظ بها على أي خادم على الإطلاق."
-                </div>
-                <p>
-                    نحن في <strong>bg.very.ly</strong> نضع أمان وخصوصية المستخدمين في المقام الأول:
-                </p>
-                <ul class="list-disc list-inside space-y-2">
-                    <li><strong>عدم تخزين الصور:</strong> تتم معالجة الصور في الذاكرة المؤقتة للخادم السحابي وتُحذف فوراً بعد إرسال النتيجة.</li>
-                    <li><strong>اتصال مشفر بالكامل:</strong> يتم إرسال واستقبال البيانات عبر بروتوكول HTTPS الآمن لمنع أي تطفل أو تسريب لملفاتك.</li>
-                    <li><strong>بدون ملفات تعريف ارتباط ضارة:</strong> لا نقوم بتعقب سلوكياتك أو جمع أي بيانات شخصية على الإطلاق.</li>
-                </ul>
-            </div>
-            <button onclick="closeModal('privacy-modal')" class="mt-6 w-full py-2.5 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors">موافق</button>
-        </div>
-    </div>
+    <!-- Notification Toasts Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
 
-    <!-- MAIN JAVASCRIPT EXECUTION AND STATE LOGIC -->
+    <!-- OpenCV.js Library Script -->
+    <script async src="https://docs.opencv.org/4.5.4/opencv.js" type="text/javascript"></script>
+
+    <!-- Custom Engine Logic -->
     <script>
-        // Theme Management
-        const htmlElement = document.documentElement;
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const themeSunIcon = document.getElementById('theme-sun');
-        const themeMoonIcon = document.getElementById('theme-moon');
+        // Global State
+        const state = {
+            imageLoaded: false,
+            originalImage: null, // HTMLImageElement or Canvas
+            processingWidth: 500, // Downscale for fast interactive processing
+            processingHeight: 500,
+            scaleX: 1, // Scaled down vs original scale factor
+            scaleY: 1,
+            seeds: [], // Array of {x, y, type: 'fg' | 'bg'}
+            activeTool: 'fg', // 'fg' or 'bg'
+            algorithm: 'grabcut', // 'grabcut' or 'color'
+            iterations: 3,
+            colorTolerance: 45,
+            feather: 1,
+            opacity: 100
+        };
 
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            if (savedTheme === 'dark') {
-                htmlElement.classList.add('dark');
-                themeSunIcon.classList.remove('hidden');
-                themeMoonIcon.classList.add('hidden');
-            } else {
-                htmlElement.classList.remove('dark');
-                themeSunIcon.classList.add('hidden');
-                themeMoonIcon.classList.remove('hidden');
-            }
-        }
+        // DOM Elements
+        const el = {
+            loaderOverlay: document.getElementById('loader-overlay'),
+            opencvStatus: document.getElementById('opencv-status'),
+            fileUpload: document.getElementById('file-upload'),
+            btnPreset: document.getElementById('btn-preset'),
+            toolFg: document.getElementById('tool-fg'),
+            toolBg: document.getElementById('tool-bg'),
+            algoSelect: document.getElementById('algo-select'),
+            grabcutSettings: document.getElementById('grabcut-settings'),
+            colorSettings: document.getElementById('color-settings'),
+            iterSlider: document.getElementById('iter-slider'),
+            iterVal: document.getElementById('iter-val'),
+            toleranceSlider: document.getElementById('tolerance-slider'),
+            toleranceVal: document.getElementById('tolerance-val'),
+            featherSlider: document.getElementById('feather-slider'),
+            featherVal: document.getElementById('feather-val'),
+            bgOpacitySlider: document.getElementById('bg-opacity-slider'),
+            btnProcess: document.getElementById('btn-process'),
+            btnClear: document.getElementById('btn-clear'),
+            btnReset: document.getElementById('btn-reset'),
+            btnDownload: document.getElementById('btn-download'),
+            canvasInput: document.getElementById('canvas-input'),
+            canvasOutput: document.getElementById('canvas-output'),
+            canvasWrapper: document.getElementById('canvas-wrapper'),
+            seedContainer: document.getElementById('seed-container'),
+            roiBox: document.getElementById('roi-box'),
+            emptyState: document.getElementById('empty-state'),
+            outputPlaceholder: document.getElementById('output-placeholder'),
+            canvasResolution: document.getElementById('canvas-resolution'),
+            metricTime: document.getElementById('metric-time'),
+            metricSeeds: document.getElementById('metric-seeds'),
+            metricRoi: document.getElementById('metric-roi'),
+            metricResolution: document.getElementById('metric-resolution'),
+            metricEngine: document.getElementById('metric-engine'),
+            colorProfileBar: document.getElementById('color-profile-bar'),
+            toastContainer: document.getElementById('toast-container')
+        };
 
-        themeToggleBtn.addEventListener('click', () => {
-            if (htmlElement.classList.contains('dark')) {
-                htmlElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-                themeSunIcon.classList.add('hidden');
-                themeMoonIcon.classList.remove('hidden');
-            } else {
-                htmlElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-                themeSunIcon.classList.remove('hidden');
-                themeMoonIcon.classList.add('hidden');
-            }
+        // Initialize Lucide Icons
+        window.addEventListener('load', () => {
+            lucide.createIcons();
+            checkOpenCVLoaded();
         });
 
-        initTheme();
-
-        // Modal Controls
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-
-        // Workspace elements
-        const dropzoneContainer = document.getElementById('dropzone-container');
-        const processingContainer = document.getElementById('processing-container');
-        const resultContainer = document.getElementById('result-container');
-        const fileInput = document.getElementById('file-input');
-        const dropzone = document.getElementById('dropzone');
-
-        const originalImg = document.getElementById('original-image');
-        const processedImg = document.getElementById('processed-image');
-        const downloadBtn = document.getElementById('download-btn');
-
-        const progressBar = document.getElementById('progress-bar');
-        const progressPercentage = document.getElementById('progress-percentage');
-        const statusText = document.getElementById('status-text');
-
-        // Drag and Drop Events
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropzone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                dropzone.classList.add('border-emerald-500', 'bg-emerald-500/5');
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                dropzone.classList.remove('border-emerald-500', 'bg-emerald-500/5');
-            }, false);
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files.length) {
-                handleImageProcessing(files[0]);
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) {
-                handleImageProcessing(e.target.files[0]);
-            }
-        });
-
-        // Load Sample Image
-        function loadSample(url) {
-            statusText.textContent = "جاري جلب صورة العينة...";
-            dropzoneContainer.classList.add('hidden');
-            processingContainer.classList.remove('hidden');
-            progressBar.style.width = '10%';
-            progressPercentage.textContent = '10%';
-
-            fetch(url)
-                .then(res => res.blob())
-                .then(blob => {
-                    const file = new File([blob], "sample.jpg", { type: "image/jpeg" });
-                    handleImageProcessing(file);
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("فشل تحميل عينة الصورة، يرجى التحقق من اتصالك بالإنترنت.");
-                    resetWorkspace();
-                });
-        }
-
-        // Handle Image Processing via Cloudflare Worker AI API
-        let originalObjectUrl = null;
-        let processedObjectUrl = null;
-
-        async function handleImageProcessing(imageFile) {
-            if (!imageFile.type.startsWith('image/')) {
-                alert('يرجى اختيار ملف صورة صالح.');
-                return;
-            }
-
-            // Set up views
-            dropzoneContainer.classList.add('hidden');
-            processingContainer.classList.remove('hidden');
-            resultContainer.classList.add('hidden');
-
-            // Save original image URL for preview
-            originalObjectUrl = URL.createObjectURL(imageFile);
-            originalImg.src = originalObjectUrl;
-
-            statusText.textContent = "جاري معالجة الصورة عبر ذكاء الغيمة الاصطناعي...";
-            progressBar.style.width = '20%';
-            progressPercentage.textContent = '20%';
-
-            // Simulate progress animation during API call
-            let simulatedProgress = 20;
-            const progressInterval = setInterval(() => {
-                if (simulatedProgress < 90) {
-                    simulatedProgress += 5;
-                    progressBar.style.width = `${simulatedProgress}%`;
-                    progressPercentage.textContent = `${simulatedProgress}%`;
+        // Loop to check if cv is loaded
+        function checkOpenCVLoaded() {
+            const checkInterval = setInterval(() => {
+                if (typeof cv !== 'undefined' && cv.Mat) {
+                    clearInterval(checkInterval);
+                    el.loaderOverlay.classList.add('opacity-0', 'pointer-events-none');
+                    showToast('OpenCV.js Engine Ready', 'Successfully initialized mathematical vision core.', 'success');
+                    initApp();
                 }
-            }, 400);
+            }, 500);
+        }
 
-            try {
-                // Send the raw binary image directly in the request body,
-                // which is the standard input format expected by Cloudflare Worker AI endpoints.
-                const response = await fetch('https://very.safealigoog.workers.dev', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': imageFile.type
-                    },
-                    body: imageFile
-                });
+        // Initialize App Event Listeners
+        function initApp() {
+            // File Upload
+            el.fileUpload.addEventListener('change', handleFileUpload);
+            el.btnPreset.addEventListener('click', loadDemoObject);
 
-                if (!response.ok) {
-                    throw new Error('فشلت عملية معالجة الصورة عبر الخادم.');
+            // Tools Selection
+            el.toolFg.addEventListener('click', () => setTool('fg'));
+            el.toolBg.addEventListener('click', () => setTool('bg'));
+
+            // Algorithm Selection
+            el.algoSelect.addEventListener('change', (e) => {
+                state.algorithm = e.target.value;
+                if (state.algorithm === 'grabcut') {
+                    el.grabcutSettings.classList.remove('hidden');
+                    el.colorSettings.classList.add('hidden');
+                    el.metricEngine.innerText = 'GrabCut CPU';
+                } else {
+                    el.grabcutSettings.classList.add('hidden');
+                    el.colorSettings.classList.remove('hidden');
+                    el.metricEngine.innerText = 'Color Distance';
                 }
+            });
 
-                const blob = await response.blob();
-                
-                clearInterval(progressInterval);
-                progressBar.style.width = '100%';
-                progressPercentage.textContent = '100%';
+            // Sliders
+            el.iterSlider.addEventListener('input', (e) => {
+                state.iterations = parseInt(e.target.value);
+                el.iterVal.innerText = state.iterations;
+            });
+            el.toleranceSlider.addEventListener('input', (e) => {
+                state.colorTolerance = parseInt(e.target.value);
+                el.toleranceVal.innerText = state.colorTolerance;
+            });
+            el.featherSlider.addEventListener('input', (e) => {
+                state.feather = parseInt(e.target.value);
+                el.featherVal.innerText = `${state.feather} px`;
+            });
+            el.bgOpacitySlider.addEventListener('input', (e) => {
+                state.opacity = parseInt(e.target.value);
+                el.canvasInput.style.opacity = state.opacity / 100;
+            });
 
-                processedObjectUrl = URL.createObjectURL(blob);
-                processedImg.src = processedObjectUrl;
+            // Interaction on Seed Overlay Canvas
+            el.seedContainer.addEventListener('click', handleCanvasClick);
 
-                // Configure download button
-                downloadBtn.href = processedObjectUrl;
-                
-                // Generate smart filename
-                const baseName = imageFile.name.substring(0, imageFile.name.lastIndexOf('.')) || 'image';
-                downloadBtn.download = `${baseName}_no_bg_very_ly.png`;
+            // Actions
+            el.btnProcess.addEventListener('click', processSegmentation);
+            el.btnClear.addEventListener('click', clearSeeds);
+            el.btnReset.addEventListener('click', resetWorkspace);
+            el.btnDownload.addEventListener('click', downloadOutput);
+        }
 
-                // Transition to result view
-                setTimeout(() => {
-                    processingContainer.classList.add('hidden');
-                    resultContainer.classList.remove('hidden');
-                    initSlider();
-                }, 400);
-
-            } catch (error) {
-                clearInterval(progressInterval);
-                console.error("Processing failed:", error);
-                alert("حدث خطأ أثناء معالجة الصورة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.");
-                resetWorkspace();
+        // Set Active Tool
+        function setTool(tool) {
+            state.activeTool = tool;
+            if (tool === 'fg') {
+                el.toolFg.className = 'flex flex-col items-center justify-center p-3 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 transition-all duration-200';
+                el.toolBg.className = 'flex flex-col items-center justify-center p-3 rounded-xl border-2 border-transparent bg-slate-950/40 hover:bg-slate-800/50 text-slate-400 hover:text-slate-200 transition-all duration-200';
+            } else {
+                el.toolFg.className = 'flex flex-col items-center justify-center p-3 rounded-xl border-2 border-transparent bg-slate-950/40 hover:bg-slate-800/50 text-slate-400 hover:text-slate-200 transition-all duration-200';
+                el.toolBg.className = 'flex flex-col items-center justify-center p-3 rounded-xl border-2 border-red-500 bg-red-500/10 text-red-400 transition-all duration-200';
             }
+        }
+
+        // Handle File Upload
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    setupImageWorkspace(img);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Create a Dynamic Demo Object (Mathematical Pattern) to start instantly
+        function loadDemoObject() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 600;
+            tempCanvas.height = 600;
+            const ctx = tempCanvas.getContext('2d');
+
+            // Draw a high contrast, complex organic shape (Simulated Flower / Sphere)
+            // Background
+            const bgGrad = ctx.createRadialGradient(300, 300, 50, 300, 300, 400);
+            bgGrad.addColorStop(0, '#111827');
+            bgGrad.addColorStop(1, '#030712');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, 600, 600);
+
+            // Draw a beautiful glowing red/orange organic core
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = 'rgba(239, 68, 68, 0.4)';
+            
+            // Draw petals
+            ctx.fillStyle = '#ef4444';
+            for (let i = 0; i < 8; i++) {
+                ctx.beginPath();
+                const angle = (i * Math.PI) / 4;
+                const petalX = 300 + Math.cos(angle) * 110;
+                const petalY = 300 + Math.sin(angle) * 110;
+                ctx.arc(petalX, petalY, 65, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Central golden yellow sphere
+            ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+            const goldenGrad = ctx.createRadialGradient(280, 280, 10, 300, 300, 90);
+            goldenGrad.addColorStop(0, '#fef08a');
+            goldenGrad.addColorStop(0.5, '#f59e0b');
+            goldenGrad.addColorStop(1, '#b45309');
+            ctx.fillStyle = goldenGrad;
+            ctx.beginPath();
+            ctx.arc(300, 300, 90, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw clean high-contrast green leaves
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(16, 185, 129, 0.3)';
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.ellipse(140, 140, 45, 80, Math.PI / 4, 0, Math.PI * 2);
+            ctx.ellipse(460, 460, 45, 80, Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            const img = new Image();
+            img.onload = function() {
+                setupImageWorkspace(img);
+                // Pre-populate some foreground and background seeds for instant user gratification
+                addSeedAtCoords(300, 300, 'fg'); // Core
+                addSeedAtCoords(210, 300, 'fg'); // Petal
+                addSeedAtCoords(60, 60, 'bg');   // Background corner
+                addSeedAtCoords(520, 100, 'bg'); // Background corner
+                updateROI();
+                showToast('Demo Environment Loaded', 'Try running GrabCut or placing more seeds.', 'info');
+            };
+            img.src = tempCanvas.toDataURL();
+        }
+
+        // Setup Workspace with loaded image
+        function setupImageWorkspace(img) {
+            state.originalImage = img;
+            state.imageLoaded = true;
+            state.seeds = [];
+            el.seedContainer.innerHTML = '';
+            el.roiBox.classList.add('hidden');
+
+            // Calculate internal scale dimensions to keep processing fast (max 500px)
+            const maxDim = Math.max(img.width, img.height);
+            if (maxDim > 500) {
+                const ratio = 500 / maxDim;
+                state.processingWidth = Math.round(img.width * ratio);
+                state.processingHeight = Math.round(img.height * ratio);
+            } else {
+                state.processingWidth = img.width;
+                state.processingHeight = img.height;
+            }
+
+            // Draw to Input Canvas
+            el.canvasInput.width = state.processingWidth;
+            el.canvasInput.height = state.processingHeight;
+            const ctx = el.canvasInput.getContext('2d');
+            ctx.drawImage(img, 0, 0, state.processingWidth, state.processingHeight);
+
+            // Set wrapper aspect ratio
+            el.canvasWrapper.style.width = `${state.processingWidth}px`;
+            el.canvasWrapper.style.height = `${state.processingHeight}px`;
+            el.canvasWrapper.style.display = 'block';
+            el.emptyState.style.display = 'none';
+
+            // Reset Output Canvas
+            const outCtx = el.canvasOutput.getContext('2d');
+            outCtx.clearRect(0, 0, el.canvasOutput.width, el.canvasOutput.height);
+            el.outputPlaceholder.style.display = 'flex';
+            el.btnDownload.disabled = true;
+
+            // Update Metrics
+            el.canvasResolution.innerText = `${img.width} x ${img.height} px`;
+            el.metricResolution.innerText = `${img.width} x ${img.height} px`;
+            updateSeedMetrics();
+            generateColorProfile(ctx);
+        }
+
+        // Click Handler on Workspace
+        function handleCanvasClick(e) {
+            if (!state.imageLoaded) return;
+
+            const rect = el.seedContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // Map click to internal scale coordinates
+            const x = Math.round((clickX / rect.width) * state.processingWidth);
+            const y = Math.round((clickY / rect.height) * state.processingHeight);
+
+            addSeedAtCoords(x, y, state.activeTool);
+        }
+
+        // Core Seed Placement Logic
+        function addSeedAtCoords(x, y, type) {
+            state.seeds.push({ x, y, type });
+
+            // Create Visual Pulse Element
+            const seedDiv = document.createElement('div');
+            seedDiv.className = `seed-point ${type === 'fg' ? 'seed-fg' : 'seed-bg'}`;
+            
+            // Position absolutely in percentage to match container size dynamically
+            const posX = (x / state.processingWidth) * 100;
+            const posY = (y / state.processingHeight) * 100;
+            seedDiv.style.left = `${posX}%`;
+            seedDiv.style.top = `${posY}%`;
+
+            // Store index reference on the element for deletion
+            const seedIdx = state.seeds.length - 1;
+            seedDiv.dataset.index = seedIdx;
+
+            // Right click / Long tap to delete individual seed
+            seedDiv.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                removeSeed(seedIdx);
+            });
+
+            el.seedContainer.appendChild(seedDiv);
+            updateSeedMetrics();
+            updateROI();
+        }
+
+        // Remove Single Seed
+        function removeSeed(index) {
+            state.seeds.splice(index, 1);
+            // Re-render remaining seeds to align indices
+            el.seedContainer.innerHTML = '';
+            const tempSeeds = [...state.seeds];
+            state.seeds = [];
+            tempSeeds.forEach(p => addSeedAtCoords(p.x, p.y, p.type));
+            updateROI();
+        }
+
+        // Clear All Seeds
+        function clearSeeds() {
+            state.seeds = [];
+            el.seedContainer.innerHTML = '';
+            el.roiBox.classList.add('hidden');
+            updateSeedMetrics();
         }
 
         // Reset Workspace
         function resetWorkspace() {
-            // Revoke URLs to free up memory
-            if (originalObjectUrl) URL.revokeObjectURL(originalObjectUrl);
-            if (processedObjectUrl) URL.revokeObjectURL(processedObjectUrl);
-
-            originalObjectUrl = null;
-            processedObjectUrl = null;
-
-            fileInput.value = '';
-            dropzoneContainer.classList.remove('hidden');
-            processingContainer.classList.add('hidden');
-            resultContainer.classList.add('hidden');
-            progressBar.style.width = '5%';
-            progressPercentage.textContent = '5%';
-            statusText.textContent = "جاري تهيئة نموذج الذكاء الاصطناعي...";
+            clearSeeds();
+            if (state.originalImage) {
+                setupImageWorkspace(state.originalImage);
+            }
         }
 
-        // Image Comparison Slider Logic
-        function initSlider() {
-            const container = document.getElementById('slider-container');
-            const originalWrap = document.getElementById('slider-original-wrap');
-            const handle = document.getElementById('slider-handle');
-            if (!container || !originalWrap || !handle) return;
-
-            let isDragging = false;
-
-            // Reset slider position to 50%
-            originalWrap.style.left = '50%';
-            handle.style.left = '50%';
-
-            function setSliderPosition(clientX) {
-                const rect = container.getBoundingClientRect();
-                let position = ((clientX - rect.left) / rect.width) * 100;
-                
-                // Boundaries check
-                if (position < 0) position = 0;
-                if (position > 100) position = 100;
-
-                // Set positions
-                originalWrap.style.left = `${position}%`;
-                handle.style.left = `${position}%`;
+        // Compute Bounding Box enclosing all FG seeds to speed up GrabCut
+        function updateROI() {
+            const fgSeeds = state.seeds.filter(s => s.type === 'fg');
+            if (fgSeeds.length === 0) {
+                el.roiBox.classList.add('hidden');
+                el.metricRoi.innerText = '0 x 0 px';
+                return;
             }
 
-            // Mouse Events
-            container.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                setSliderPosition(e.clientX);
-            });
+            let minX = Math.min(...fgSeeds.map(s => s.x));
+            let maxX = Math.max(...fgSeeds.map(s => s.x));
+            let minY = Math.min(...fgSeeds.map(s => s.y));
+            let maxY = Math.max(...fgSeeds.map(s => s.y));
 
-            window.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
+            // Add Padding around seeds
+            const padX = Math.max(25, (maxX - minX) * 0.25);
+            const padY = Math.max(25, (maxY - minY) * 0.25);
 
-            window.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                setSliderPosition(e.clientX);
-            });
+            const x = Math.max(0, Math.round(minX - padX));
+            const y = Math.max(0, Math.round(minY - padY));
+            const w = Math.min(state.processingWidth - x, Math.round((maxX - minX) + 2 * padX));
+            const h = Math.min(state.processingHeight - y, Math.round((maxY - minY) + 2 * padY));
 
-            // Touch Events
-            container.addEventListener('touchstart', (e) => {
-                isDragging = true;
-                if (e.touches.length > 0) {
-                    setSliderPosition(e.touches[0].clientX);
+            // Map coordinates back to CSS Percentage
+            const leftPercent = (x / state.processingWidth) * 100;
+            const topPercent = (y / state.processingHeight) * 100;
+            const widthPercent = (w / state.processingWidth) * 100;
+            const heightPercent = (h / state.processingHeight) * 100;
+
+            el.roiBox.style.left = `${leftPercent}%`;
+            el.roiBox.style.top = `${topPercent}%`;
+            el.roiBox.style.width = `${widthPercent}%`;
+            el.roiBox.style.height = `${heightPercent}%`;
+            el.roiBox.classList.remove('hidden');
+
+            el.metricRoi.innerText = `${w} x ${h} px`;
+        }
+
+        // Update Seed Metrics Panel
+        function updateSeedMetrics() {
+            const fg = state.seeds.filter(s => s.type === 'fg').length;
+            const bg = state.seeds.filter(s => s.type === 'bg').length;
+            el.metricSeeds.innerText = `${state.seeds.length} (${fg} F / ${bg} B)`;
+        }
+
+        // Simple Color Profile Generator for visual fidelity
+        function generateColorProfile(ctx) {
+            try {
+                const imgData = ctx.getImageData(0, 0, state.processingWidth, state.processingHeight).data;
+                let r = 0, g = 0, b = 0;
+                const step = 40; // Sample every 10th pixel
+                let samples = 0;
+                for (let i = 0; i < imgData.length; i += step) {
+                    r += imgData[i];
+                    g += imgData[i+1];
+                    b += imgData[i+2];
+                    samples++;
                 }
-            });
+                r = Math.round(r / samples);
+                g = Math.round(g / samples);
+                b = Math.round(b / samples);
 
-            window.addEventListener('touchend', () => {
-                isDragging = false;
-            });
+                el.colorProfileBar.innerHTML = `
+                    <div class="flex-1" style="background-color: rgb(${r}, ${g}, ${b})"></div>
+                    <div class="flex-1" style="background-color: rgb(${Math.round(r*0.6)}, ${Math.round(g*1.2)}, ${Math.round(b*0.8)})"></div>
+                    <div class="flex-1" style="background-color: rgb(${Math.round(r*0.3)}, ${Math.round(g*0.3)}, ${Math.round(b*0.4)})"></div>
+                `;
+            } catch (err) {
+                console.error('Failed to generate color profile', err);
+            }
+        }
 
-            window.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                if (e.touches.length > 0) {
-                    setSliderPosition(e.touches[0].clientX);
+        // Core Segmentation Pipeline Execution
+        function processSegmentation() {
+            if (!state.imageLoaded) {
+                showToast('No Image', 'Please upload or generate an image first.', 'warning');
+                return;
+            }
+
+            const fgSeeds = state.seeds.filter(s => s.type === 'fg');
+            if (fgSeeds.length === 0) {
+                showToast('No Foreground Seeds', 'Please place at least one green seed on the object.', 'warning');
+                return;
+            }
+
+            el.btnProcess.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
+            el.btnProcess.disabled = true;
+
+            // Use setTimeout to allow UI to update loading state
+            setTimeout(() => {
+                const startTime = performance.now();
+                let success = false;
+
+                try {
+                    if (state.algorithm === 'grabcut') {
+                        success = executeGrabCut();
+                    } else {
+                        success = executeColorDistance();
+                    }
+
+                    if (success) {
+                        const endTime = performance.now();
+                        el.metricTime.innerText = `${(endTime - startTime).toFixed(2)} ms`;
+                        showToast('Segmentation Complete', 'Object isolated successfully.', 'success');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showToast('Processing Error', 'Mathematical engine failed. Try resetting seeds.', 'error');
+                } finally {
+                    el.btnProcess.innerHTML = `<i data-lucide="play" class="w-4 h-4 fill-current"></i> Process Segmentation`;
+                    el.btnProcess.disabled = false;
+                    lucide.createIcons();
                 }
+            }, 50);
+        }
+
+        // OpenCV.js GrabCut Implementation
+        function executeGrabCut() {
+            // Read image from workspace canvas
+            let src = cv.imread(el.canvasInput);
+            
+            // Prepare Mask
+            let mask = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC1);
+            
+            // Calculate ROI (Bounding Box)
+            const fgSeeds = state.seeds.filter(s => s.type === 'fg');
+            const bgSeeds = state.seeds.filter(s => s.type === 'bg');
+
+            let minX = Math.min(...fgSeeds.map(s => s.x));
+            let maxX = Math.max(...fgSeeds.map(s => s.x));
+            let minY = Math.min(...fgSeeds.map(s => s.y));
+            let maxY = Math.max(...fgSeeds.map(s => s.y));
+
+            const padX = Math.max(25, (maxX - minX) * 0.25);
+            const padY = Math.max(25, (maxY - minY) * 0.25);
+
+            const rx = Math.max(0, Math.round(minX - padX));
+            const ry = Math.max(0, Math.round(minY - padY));
+            const rw = Math.min(src.cols - rx, Math.round((maxX - minX) + 2 * padX));
+            const rh = Math.min(src.rows - ry, Math.round((maxY - minY) + 2 * padY));
+
+            let rect = new cv.Rect(rx, ry, rw, rh);
+
+            // Initialize mask inside the bounding box as probably foreground
+            for (let r = 0; r < mask.rows; r++) {
+                for (let c = 0; c < mask.cols; c++) {
+                    if (r >= ry && r < ry + rh && c >= rx && c < rx + rw) {
+                        mask.ucharWrite(r, c, cv.GC_PR_FGD); // Probably Foreground (3)
+                    } else {
+                        mask.ucharWrite(r, c, cv.GC_BGD); // Background (0)
+                    }
+                }
+            }
+
+            // Write explicit seeds onto mask
+            // Foreground seeds -> GC_FGD (1)
+            const brushRadius = Math.max(4, Math.round(src.cols * 0.015));
+            fgSeeds.forEach(p => {
+                let center = new cv.Point(p.x, p.y);
+                cv.circle(mask, center, brushRadius, new cv.Scalar(cv.GC_FGD), -1);
             });
+
+            // Background seeds -> GC_BGD (0)
+            bgSeeds.forEach(p => {
+                let center = new cv.Point(p.x, p.y);
+                cv.circle(mask, center, brushRadius, new cv.Scalar(cv.GC_BGD), -1);
+            });
+
+            // Models required by OpenCV GrabCut
+            let bgdModel = new cv.Mat();
+            let fgdModel = new cv.Mat();
+
+            // Run GrabCut
+            cv.grabCut(src, mask, rect, bgdModel, fgdModel, state.iterations, cv.GC_INIT_WITH_MASK);
+
+            // Create Transparent Output Mat
+            let dst = new cv.Mat(src.rows, src.cols, cv.CV_8UC4);
+
+            // Map mask values back to transparency channel
+            for (let r = 0; r < mask.rows; r++) {
+                for (let c = 0; c < mask.cols; c++) {
+                    let maskVal = mask.ucharAt(r, c);
+                    let pixel = src.ucharPtr(r, c);
+                    
+                    if (maskVal === cv.GC_FGD || maskVal === cv.GC_PR_FGD) {
+                        dst.ucharPtr(r, c)[0] = pixel[0]; // R
+                        dst.ucharPtr(r, c)[1] = pixel[1]; // G
+                        dst.ucharPtr(r, c)[2] = pixel[2]; // B
+                        dst.ucharPtr(r, c)[3] = 255;      // A (Opaque)
+                    } else {
+                        dst.ucharPtr(r, c)[0] = 0;
+                        dst.ucharPtr(r, c)[1] = 0;
+                        dst.ucharPtr(r, c)[2] = 0;
+                        dst.ucharPtr(r, c)[3] = 0;        // A (Transparent)
+                    }
+                }
+            }
+
+            // Apply Edge Smoothing (Feathering) via Gaussian Blur on Alpha mask if requested
+            if (state.feather > 0) {
+                applyEdgeSmoothing(dst, state.feather);
+            }
+
+            // Draw to Output Canvas
+            el.canvasOutput.width = dst.cols;
+            el.canvasOutput.height = dst.rows;
+            cv.imshow(el.canvasOutput, dst);
+
+            // Cleanup Mats to avoid memory leaks
+            src.delete();
+            mask.delete();
+            bgdModel.delete();
+            fgdModel.delete();
+            dst.delete();
+
+            el.outputPlaceholder.style.display = 'none';
+            el.btnDownload.disabled = false;
+            return true;
+        }
+
+        // Custom Mathematical Color Distance Algorithm (Instance/Instant Mode)
+        function executeColorDistance() {
+            let src = cv.imread(el.canvasInput);
+            let dst = new cv.Mat(src.rows, src.cols, cv.CV_8UC4);
+
+            const fgSeeds = state.seeds.filter(s => s.type === 'fg');
+            const bgSeeds = state.seeds.filter(s => s.type === 'bg');
+
+            // Gather color vectors of all foreground seeds
+            const fgColors = fgSeeds.map(p => {
+                const ptr = src.ucharPtr(p.y, p.x);
+                return [ptr[0], ptr[1], ptr[2]];
+            });
+
+            // Gather background seed color vectors
+            const bgColors = bgSeeds.map(p => {
+                const ptr = src.ucharPtr(p.y, p.x);
+                return [ptr[0], ptr[1], ptr[2]];
+            });
+
+            const toleranceSq = state.colorTolerance * state.colorTolerance;
+
+            // Pixel-by-pixel Euclidean Color Distance Evaluation
+            for (let r = 0; r < src.rows; r++) {
+                for (let c = 0; c < src.cols; c++) {
+                    const ptr = src.ucharPtr(r, c);
+                    const pr = ptr[0], pg = ptr[1], pb = ptr[2];
+
+                    // Find minimum distance to any foreground seed color
+                    let minFgDistSq = Infinity;
+                    fgColors.forEach(color => {
+                        const distSq = (pr - color[0])**2 + (pg - color[1])**2 + (pb - color[2])**2;
+                        if (distSq < minFgDistSq) minFgDistSq = distSq;
+                    });
+
+                    // Find minimum distance to any background seed color
+                    let minBgDistSq = Infinity;
+                    bgColors.forEach(color => {
+                        const distSq = (pr - color[0])**2 + (pg - color[1])**2 + (pb - color[2])**2;
+                        if (distSq < minBgDistSq) minBgDistSq = distSq;
+                    });
+
+                    // Classify pixel mathematically
+                    let isForeground = minFgDistSq < toleranceSq;
+                    if (bgColors.length > 0 && minBgDistSq < minFgDistSq) {
+                        isForeground = false; // Exclude if mathematically closer to background seed
+                    }
+
+                    if (isForeground) {
+                        dst.ucharPtr(r, c)[0] = pr;
+                        dst.ucharPtr(r, c)[1] = pg;
+                        dst.ucharPtr(r, c)[2] = pb;
+                        dst.ucharPtr(r, c)[3] = 255;
+                    } else {
+                        dst.ucharPtr(r, c)[0] = 0;
+                        dst.ucharPtr(r, c)[1] = 0;
+                        dst.ucharPtr(r, c)[2] = 0;
+                        dst.ucharPtr(r, c)[3] = 0;
+                    }
+                }
+            }
+
+            if (state.feather > 0) {
+                applyEdgeSmoothing(dst, state.feather);
+            }
+
+            el.canvasOutput.width = dst.cols;
+            el.canvasOutput.height = dst.rows;
+            cv.imshow(el.canvasOutput, dst);
+
+            src.delete();
+            dst.delete();
+
+            el.outputPlaceholder.style.display = 'none';
+            el.btnDownload.disabled = false;
+            return true;
+        }
+
+        // Apply feathering to the Alpha Channel of the RGBA Mat
+        function applyEdgeSmoothing(rgbaMat, featherRadius) {
+            // Split channels
+            let channels = new cv.MatVector();
+            cv.split(rgbaMat, channels);
+            
+            let alpha = channels.get(3);
+            let blurredAlpha = new cv.Mat();
+            
+            // Apply Gaussian blur on alpha channel
+            let ksize = new cv.Size(featherRadius * 2 + 1, featherRadius * 2 + 1);
+            cv.GaussianBlur(alpha, blurredAlpha, ksize, 0, 0, cv.BORDER_DEFAULT);
+            
+            // Replace alpha channel
+            channels.set(3, blurredAlpha);
+            cv.merge(channels, rgbaMat);
+
+            channels.delete();
+            alpha.delete();
+            blurredAlpha.delete();
+        }
+
+        // Export Alpha Channel PNG
+        function downloadOutput() {
+            if (!state.imageLoaded) return;
+
+            // Generate high quality PNG blob
+            const link = document.createElement('a');
+            link.download = 'quantumcut_segmented.png';
+            link.href = el.canvasOutput.toDataURL('image/png');
+            link.click();
+            showToast('Export Successful', 'Transparent PNG downloaded.', 'success');
+        }
+
+        // Dynamic Toast Notification System
+        function showToast(title, message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `flex items-start gap-3 p-4 rounded-xl border bg-slate-900/95 backdrop-blur-md shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0 w-80`;
+            
+            let borderClass = 'border-slate-800';
+            let iconMarkup = `<i data-lucide="info" class="w-5 h-5 text-blue-400"></i>`;
+            
+            if (type === 'success') {
+                borderClass = 'border-emerald-500/30';
+                iconMarkup = `<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>`;
+            } else if (type === 'warning') {
+                borderClass = 'border-amber-500/30';
+                iconMarkup = `<i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400"></i>`;
+            } else if (type === 'error') {
+                borderClass = 'border-red-500/30';
+                iconMarkup = `<i data-lucide="alert-circle" class="w-5 h-5 text-red-400"></i>`;
+            }
+
+            toast.className += ` ${borderClass}`;
+            toast.innerHTML = `
+                <div class="shrink-0 mt-0.5">${iconMarkup}</div>
+                <div class="flex-1">
+                    <h4 class="text-xs font-bold text-slate-100">${title}</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">${message}</p>
+                </div>
+            `;
+
+            el.toastContainer.appendChild(toast);
+            lucide.createIcons();
+
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Auto dismiss after 4 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
         }
     </script>
 </body>
