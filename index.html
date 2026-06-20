@@ -6,10 +6,10 @@
     
     <!-- SEO Meta Tags -->
     <title>أداة إزالة وخلفيات الصور ذكياً - bg.very.ly</title>
-    <meta name="description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة محلياً داخل متصفحك بشكل آمن تماماً وبأعلى جودة لعام 2026.">
+    <meta name="description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة عبر ذكاء الغيمة الاصطناعي بشكل آمن تماماً وبأعلى جودة لعام 2026.">
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="أداة إزالة وخلفيات الصور ذكياً - bg.very.ly">
-    <meta property="og:description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة محلياً داخل متصفحك بشكل آمن تماماً وبأعلى جودة لعام 2026.">
+    <meta property="og:description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة عبر ذكاء الغيمة الاصطناعي بشكل آمن تماماً وبأعلى جودة لعام 2026.">
     <meta property="og:type" content="website">
     
     <!-- Favicon to prevent 404 error -->
@@ -22,9 +22,6 @@
 
     <!-- Tailwind CSS v4 -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
-    <!-- @imgly/background-removal CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/bundle.js"></script>
 
     <style type="text/tailwindcss">
         @theme {
@@ -98,7 +95,7 @@
                 <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
 
                 <!-- Theme Toggle Button -->
-                <button id="theme-toggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 hover:scale-105 transition-all" aria-label="تغيير المظهر">
+                <button id="theme-toggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 hover:scale-105 transition-all" aria-label="تغيير المظهر">
                     <!-- Sun Icon -->
                     <svg id="theme-sun" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
@@ -119,14 +116,14 @@
         <section class="max-w-4xl mx-auto px-4 pt-12 pb-6 text-center">
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mb-6 animate-pulse">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                ذكاء اصطناعي محلي 100% - خصوصية مطلقة
+                ذكاء اصطناعي سحابي فوري - خصوصية وأمان
             </div>
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6">
                 احذف خلفية الصور <br class="hidden sm:inline">
                 <span class="bg-gradient-to-r from-emerald-500 to-lime-400 bg-clip-text text-transparent">بضغطة زر واحدة مجاناً</span>
             </h1>
             <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                قم بعزل العناصر والأشخاص بدقة فائقة مباشرة داخل متصفحك. لا يتم رفع صورك إلى أي خادم، معالجة آمنة وسريعة بالكامل على جهازك.
+                قم بعزل العناصر والأشخاص بدقة فائقة عبر خوادم Cloudflare فائقة السرعة. معالجة آمنة وفورية بالكامل باستخدام نموذج Bria RMBG المتطور.
             </p>
         </section>
 
@@ -182,14 +179,13 @@
                         <div class="absolute inset-0 flex items-center justify-center">
                             <svg class="w-8 h-8 text-emerald-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.904-4.473L21 9l-3.482-3.482-7.705 7.705z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.904-4.473L21 9l-3.482-3.482-7.705 7.705z" />
                             </svg>
                         </div>
                     </div>
                     
-                    <h4 id="status-text" class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-3">جاري تهيئة نموذج الذكاء الاصطناعي...</h4>
+                    <h4 id="status-text" class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-3">جاري معالجة الصورة عبر ذكاء الغيمة الاصطناعي...</h4>
                     <p class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 max-w-md mb-6 leading-relaxed">
-                        قد يستغرق التحميل الأولي من دقيقة إلى دقيقتين لتنزيل ملفات الـ WASM وتخزينها محلياً على جهازك. المرات القادمة ستكون فورية!
+                        يتم الآن إرسال الصورة بشكل آمن ومعالجتها فورياً باستخدام نموذج Bria RMBG المتطور على شبكة Cloudflare السحابية.
                     </p>
 
                     <!-- Custom Progress Bar -->
@@ -241,7 +237,7 @@
                             <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/60">
                                 <h5 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-2">تم عزل الخلفية بنجاح!</h5>
                                 <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-                                    تمت معالجة الصورة محلياً بجودة كاملة وبصيغة PNG شفافة ومستعدة للتحميل المباشر.
+                                    تمت معالجة الصورة عبر ذكاء الغيمة الاصطناعي بجودة كاملة وبصيغة PNG شفافة ومستعدة للتحميل المباشر.
                                 </p>
                                 
                                 <div class="space-y-2">
@@ -251,7 +247,7 @@
                                     </div>
                                     <div class="flex justify-between text-xs">
                                         <span class="text-slate-400">الأمان والخصوصية:</span>
-                                        <span class="font-bold text-emerald-500">محلي 100%</span>
+                                        <span class="font-bold text-emerald-500">مشفر وآمن</span>
                                     </div>
                                 </div>
                             </div>
@@ -261,7 +257,7 @@
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
-                                تحميل الصورة المعزولة (PNG)
+                                تحميل الصورة المعزولة (Download PNG)
                             </a>
 
                             <!-- Reset Button -->
@@ -283,7 +279,7 @@
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
             <div class="text-center max-w-3xl mx-auto mb-16">
                 <h2 class="text-2xl sm:text-3xl font-extrabold mb-4">لماذا تختار bg.very.ly لمعالجة صورك؟</h2>
-                <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400">نحن نجمع بين القوة المطلقة للذكاء الاصطناعي والأمان الفائق للعمليات المحلية دون أي خوادم وسيطة.</p>
+                <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400">نحن نجمع بين القوة المطلقة للذكاء الاصطناعي السحابي والأمان الفائق للعمليات دون أي تخزين لملفاتك.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -296,7 +292,7 @@
                     </div>
                     <h3 class="text-lg font-bold mb-3">خصوصية وأمان 100%</h3>
                     <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        تتم معالجة جميع صورك محلياً بالكامل داخل متصفح الإنترنت الخاص بك. لا يتم إرسال أي بايت من بياناتك إلى أي خادم، مما يضمن سرية تامة لملفاتك الحساسة والخاصة.
+                        تتم معالجة جميع صورك بشكل آمن عبر قنوات مشفرة. لا يتم تخزين أي صورة على خوادمنا، حيث يتم حذفها فوراً بمجرد انتهاء عملية العزل وإرسال النتيجة إليك.
                     </p>
                 </div>
 
@@ -309,7 +305,7 @@
                     </div>
                     <h3 class="text-lg font-bold mb-3">سرعة فائقة بالذكاء الاصطناعي</h3>
                     <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        نستخدم أحدث تقنيات الويب المتقدمة WebAssembly وعزل النماذج لتشغيل خوارزميات الذكاء الاصطناعي مباشرة على كارت الشاشة أو المعالج الخاص بجهازك لأداء فوري وسلس.
+                        نستخدم أحدث تقنيات Cloudflare Worker AI لتشغيل خوارزميات الذكاء الاصطناعي المتطورة Bria RMBG على خوادم سحابية قريبة منك لأداء فوري وسلس للغاية.
                     </p>
                 </div>
 
@@ -322,7 +318,7 @@
                     </div>
                     <h3 class="text-lg font-bold mb-3">جودة عالية الدقة مجاناً</h3>
                     <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        لا داعي لدفع اشتراكات مكلفة أو استخدام أدوات تضع علامات مائية على صورك. احصل على شفافية كاملة وحواف نظيفة لصورك الشخصية أو منتجات متجرك الإلكتروني مجاناً.
+                        لا داعي لدفع اشتراكات مكلفة أو استخدام أدوات تضع علامات مائية على صورك. احصل على شفافية كاملة وحواف نظيفة لصورك الشخصية أو منتجات متجرك الإلكتروني مجاناً وبأعلى دقة.
                     </p>
                 </div>
             </div>
@@ -342,7 +338,7 @@
                         <span class="text-lg font-bold text-slate-900 dark:text-white">bg.very.ly</span>
                     </div>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">
-                        أداة مفتوحة المصدر لمعالجة وعزل خلفيات الصور بأمان تام وخصوصية مطلقة داخل متصفحك دون إرسال أي بيانات للخارج.
+                        أداة متطورة لمعالجة وعزل خلفيات الصور بأمان تام وخصوصية مطلقة عبر ذكاء الغيمة الاصطناعي دون تخزين أي بيانات.
                     </p>
                 </div>
 
@@ -389,10 +385,10 @@
                     تعتبر أداة <strong>bg.very.ly</strong> حلاً مبتكراً واحترافياً لإزالة خلفيات الصور وعزل العناصر والأشخاص بدقة استثنائية وبشكل مجاني تماماً.
                 </p>
                 <p>
-                    على عكس الأدوات التقليدية التي تتطلب رفع صورك وملفاتك الحساسة إلى خوادم سحابية مجهولة مما يهدد خصوصيتك، تعمل هذه الأداة محلياً 100% داخل متصفحك باستخدام تقنيات <strong>WebAssembly (WASM)</strong> والذكاء الاصطناعي المتقدم لشركة <strong>@imgly/background-removal</strong>.
+                    تتصل هذه الأداة بواجهة برمجة تطبيقات Cloudflare Worker AI مخصصة لإزالة خلفيات الصور فورياً باستخدام نموذج الذكاء الاصطناعي المتطور <strong>@cf/briaai/bria-rmbg</strong>.
                 </p>
                 <p>
-                    هذا يعني أن صورتك لا تغادر جهازك (سواء كان هاتفاً ذكياً أو حاسوباً شخصياً) على الإطلاق، وتتم المعالجة باستخدام موارد جهازك الخاصة مما يمنحك سرية تامة وأماناً لا مثيل له.
+                    هذا يعني معالجة فائقة السرعة وعالية الدقة دون استهلاك موارد جهازك الشخصي، مع الحفاظ الكامل على جودة الصورة الأصلية وتوفيرها بصيغة PNG شفافة جاهزة للاستخدام المباشر.
                 </p>
             </div>
             <button onclick="closeModal('about-modal')" class="mt-6 w-full py-2.5 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors">فهمت ذلك</button>
@@ -411,19 +407,16 @@
             <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">سياسة الخصوصية والأمان</h3>
             <div class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 <div class="p-3 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-                    تعهد الخصوصية: "0% من بياناتك أو صورك يتم إرسالها أو تخزينها خارج جهازك الشخصي."
+                    تعهد الخصوصية: "يتم نقل صورك عبر قنوات مشفرة آمنة، ولا يتم تخزينها أو الاحتفاظ بها على أي خادم على الإطلاق."
                 </div>
                 <p>
                     نحن في <strong>bg.very.ly</strong> نضع أمان وخصوصية المستخدمين في المقام الأول:
                 </p>
                 <ul class="list-disc list-inside space-y-2">
-                    <li><strong>عدم تخزين الصور:</strong> نحن لا نمتلك خوادم لاستقبال أو تخزين صورك.</li>
-                    <li><strong>معالجة محلية بالكامل:</strong> يتم تشغيل نموذج الذكاء الاصطناعي بالكامل داخل بيئة تشغيل جهازك (Sandbox) بشكل معزول ومحمي.</li>
+                    <li><strong>عدم تخزين الصور:</strong> تتم معالجة الصور في الذاكرة المؤقتة للخادم السحابي وتُحذف فوراً بعد إرسال النتيجة.</li>
+                    <li><strong>اتصال مشفر بالكامل:</strong> يتم إرسال واستقبال البيانات عبر بروتوكول HTTPS الآمن لمنع أي تطفل أو تسريب لملفاتك.</li>
                     <li><strong>بدون ملفات تعريف ارتباط ضارة:</strong> لا نقوم بتعقب سلوكياتك أو جمع أي بيانات شخصية على الإطلاق.</li>
                 </ul>
-                <p>
-                    يمكنك استخدام الأداة وأنت في وضع عدم الاتصال بالإنترنت (Offline) تماماً بمجرد تحميل الصفحة لأول مرة، مما يؤكد التزامنا الصارم بالخصوصية المطلقة.
-                </p>
             </div>
             <button onclick="closeModal('privacy-modal')" class="mt-6 w-full py-2.5 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors">موافق</button>
         </div>
@@ -523,7 +516,6 @@
 
         // Load Sample Image
         function loadSample(url) {
-            // Convert URL to Blob to simulate file upload
             statusText.textContent = "جاري جلب صورة العينة...";
             dropzoneContainer.classList.add('hidden');
             processingContainer.classList.remove('hidden');
@@ -543,20 +535,13 @@
                 });
         }
 
-        // Handle Image Processing via imglyBackgroundRemoval
+        // Handle Image Processing via Cloudflare Worker AI API
         let originalObjectUrl = null;
         let processedObjectUrl = null;
 
         async function handleImageProcessing(imageFile) {
             if (!imageFile.type.startsWith('image/')) {
                 alert('يرجى اختيار ملف صورة صالح.');
-                return;
-            }
-
-            if (typeof window.imglyBackgroundRemoval === 'undefined') {
-                console.error("Library not loaded yet");
-                alert("عذراً، لم يتم تحميل مكتبة الذكاء الاصطناعي بشكل كامل بعد أو أن هناك مشكلة في الاتصال. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.");
-                resetWorkspace();
                 return;
             }
 
@@ -569,30 +554,39 @@
             originalObjectUrl = URL.createObjectURL(imageFile);
             originalImg.src = originalObjectUrl;
 
-            // Explicitly routing asset paths to jsdelivr CDN to prevent local file errors
-            const config = {
-                publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/",
-                progress: (percentage, status) => {
-                    const percent = Math.round(percentage * 100);
-                    
-                    // Translate progress keys to Arabic user-friendly status
-                    let arabicStatus = "جاري المعالجة...";
-                    if (status && status.includes('fetch')) {
-                        arabicStatus = "جاري تحميل نموذج الذكاء الاصطناعي للمتصفح (مرة واحدة فقط)...";
-                    } else if (status && status.includes('compute')) {
-                        arabicStatus = "جاري عزل الخلفية وتحديد العناصر الذكية...";
-                    } else if (status) {
-                        arabicStatus = `جاري المعالجة (${status})...`;
-                    }
+            statusText.textContent = "جاري معالجة الصورة عبر ذكاء الغيمة الاصطناعي...";
+            progressBar.style.width = '20%';
+            progressPercentage.textContent = '20%';
 
-                    statusText.textContent = arabicStatus;
-                    progressBar.style.width = `${percent}%`;
-                    progressPercentage.textContent = `${percent}%`;
+            // Simulate progress animation during API call
+            let simulatedProgress = 20;
+            const progressInterval = setInterval(() => {
+                if (simulatedProgress < 90) {
+                    simulatedProgress += 5;
+                    progressBar.style.width = `${simulatedProgress}%`;
+                    progressPercentage.textContent = `${simulatedProgress}%`;
                 }
-            };
+            }, 400);
 
             try {
-                const blob = await window.imglyBackgroundRemoval(imageFile, config);
+                const formData = new FormData();
+                formData.append('image', imageFile);
+
+                const response = await fetch('https://very.safealigoog.workers.dev', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('فشلت عملية معالجة الصورة عبر الخادم.');
+                }
+
+                const blob = await response.blob();
+                
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                progressPercentage.textContent = '100%';
+
                 processedObjectUrl = URL.createObjectURL(blob);
                 processedImg.src = processedObjectUrl;
 
@@ -604,14 +598,16 @@
                 downloadBtn.download = `${baseName}_no_bg_very_ly.png`;
 
                 // Transition to result view
-                processingContainer.classList.add('hidden');
-                resultContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    processingContainer.classList.add('hidden');
+                    resultContainer.classList.remove('hidden');
+                    initSlider();
+                }, 400);
 
-                // Initialize Comparison Slider
-                initSlider();
             } catch (error) {
+                clearInterval(progressInterval);
                 console.error("Processing failed:", error);
-                alert("حدث خطأ أثناء معالجة الصورة. قد يكون السبب عدم توافق المتصفح مع WebAssembly أو حجم الصورة الكبير جداً.");
+                alert("حدث خطأ أثناء معالجة الصورة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.");
                 resetWorkspace();
             }
         }
