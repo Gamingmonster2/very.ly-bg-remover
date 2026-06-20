@@ -547,9 +547,16 @@
         let originalObjectUrl = null;
         let processedObjectUrl = null;
 
-        function handleImageProcessing(file) {
-            if (!file.type.startsWith('image/')) {
+        async function handleImageProcessing(imageFile) {
+            if (!imageFile.type.startsWith('image/')) {
                 alert('يرجى اختيار ملف صورة صالح.');
+                return;
+            }
+
+            if (typeof window.imglyBackgroundRemoval === 'undefined') {
+                console.error("Library not loaded yet");
+                alert("عذراً، لم يتم تحميل مكتبة الذكاء الاصطناعي بشكل كامل بعد أو أن هناك مشكلة في الاتصال. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.");
+                resetWorkspace();
                 return;
             }
 
@@ -559,21 +566,23 @@
             resultContainer.classList.add('hidden');
 
             // Save original image URL for preview
-            originalObjectUrl = URL.createObjectURL(file);
+            originalObjectUrl = URL.createObjectURL(imageFile);
             originalImg.src = originalObjectUrl;
 
-            // Configure @imgly/background-removal
+            // Explicitly routing asset paths to jsdelivr CDN to prevent local file errors
             const config = {
-                publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/',
-                progress: (key, current, total) => {
-                    const percent = Math.round((current / total) * 100);
+                publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/",
+                progress: (percentage, status) => {
+                    const percent = Math.round(percentage * 100);
                     
                     // Translate progress keys to Arabic user-friendly status
                     let arabicStatus = "جاري المعالجة...";
-                    if (key.includes('fetch')) {
+                    if (status && status.includes('fetch')) {
                         arabicStatus = "جاري تحميل نموذج الذكاء الاصطناعي للمتصفح (مرة واحدة فقط)...";
-                    } else if (key.includes('compute')) {
+                    } else if (status && status.includes('compute')) {
                         arabicStatus = "جاري عزل الخلفية وتحديد العناصر الذكية...";
+                    } else if (status) {
+                        arabicStatus = `جاري المعالجة (${status})...`;
                     }
 
                     statusText.textContent = arabicStatus;
@@ -582,48 +591,29 @@
                 }
             };
 
-            // Safely resolve the background removal function from global scope
-            let removeBackgroundFn = null;
-            if (typeof imglyBackgroundRemoval !== 'undefined') {
-                removeBackgroundFn = typeof imglyBackgroundRemoval === 'function' ? imglyBackgroundRemoval : imglyBackgroundRemoval.default;
-            } else if (typeof window.backgroundRemoval !== 'undefined') {
-                removeBackgroundFn = typeof window.backgroundRemoval === 'function' ? window.backgroundRemoval : window.backgroundRemoval.default;
-            } else if (window.imglyBackgroundRemoval) {
-                removeBackgroundFn = typeof window.imglyBackgroundRemoval === 'function' ? window.imglyBackgroundRemoval : window.imglyBackgroundRemoval.default;
-            }
+            try {
+                const blob = await window.imglyBackgroundRemoval(imageFile, config);
+                processedObjectUrl = URL.createObjectURL(blob);
+                processedImg.src = processedObjectUrl;
 
-            if (!removeBackgroundFn) {
-                console.error("Background removal library is not loaded in the global scope.");
-                alert("عذراً، لم يتم تحميل مكتبة الذكاء الاصطناعي بشكل كامل بعد أو أن هناك مشكلة في الاتصال. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.");
+                // Configure download button
+                downloadBtn.href = processedObjectUrl;
+                
+                // Generate smart filename
+                const baseName = imageFile.name.substring(0, imageFile.name.lastIndexOf('.')) || 'image';
+                downloadBtn.download = `${baseName}_no_bg_very_ly.png`;
+
+                // Transition to result view
+                processingContainer.classList.add('hidden');
+                resultContainer.classList.remove('hidden');
+
+                // Initialize Comparison Slider
+                initSlider();
+            } catch (error) {
+                console.error("Processing failed:", error);
+                alert("حدث خطأ أثناء معالجة الصورة. قد يكون السبب عدم توافق المتصفح مع WebAssembly أو حجم الصورة الكبير جداً.");
                 resetWorkspace();
-                return;
             }
-
-            // Trigger browser-side background removal execution
-            removeBackgroundFn(file, config)
-                .then(blob => {
-                    processedObjectUrl = URL.createObjectURL(blob);
-                    processedImg.src = processedObjectUrl;
-
-                    // Configure download button
-                    downloadBtn.href = processedObjectUrl;
-                    
-                    // Generate smart filename
-                    const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || 'image';
-                    downloadBtn.download = `${baseName}_no_bg_very_ly.png`;
-
-                    // Transition to result view
-                    processingContainer.classList.add('hidden');
-                    resultContainer.classList.remove('hidden');
-
-                    // Initialize Comparison Slider
-                    initSlider();
-                })
-                .catch(error => {
-                    console.error("Error processing background removal:", error);
-                    alert("حدث خطأ أثناء معالجة الصورة. قد يكون السبب عدم توافق المتصفح مع WebAssembly أو حجم الصورة الكبير جداً.");
-                    resetWorkspace();
-                });
         }
 
         // Reset Workspace
