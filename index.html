@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,8 +117,11 @@
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span class="text-xs font-semibold text-slate-300" id="opencv-status">OpenCV.js Loaded</span>
             </div>
-            <a href="https://github.com" target="_blank" class="text-slate-400 hover:text-white transition-colors">
-                <i data-lucide="github" class="w-5 h-5"></i>
+            <a href="https://github.com" target="_blank" class="text-slate-400 hover:text-white transition-colors" aria-label="GitHub">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+                    <path d="M9 18c-4.51 2-5-2-7-2"></path>
+                </svg>
             </a>
         </div>
     </header>
@@ -597,10 +602,10 @@
                 state.processingHeight = img.height;
             }
 
-            // Draw to Input Canvas
+            // Draw to Input Canvas with willReadFrequently optimization
             el.canvasInput.width = state.processingWidth;
             el.canvasInput.height = state.processingHeight;
-            const ctx = el.canvasInput.getContext('2d');
+            const ctx = el.canvasInput.getContext('2d', { willReadFrequently: true });
             ctx.drawImage(img, 0, 0, state.processingWidth, state.processingHeight);
 
             // Set wrapper aspect ratio
@@ -837,12 +842,15 @@
             let rect = new cv.Rect(rx, ry, rw, rh);
 
             // Initialize mask inside the bounding box as probably foreground
+            let maskData = mask.data;
+            let cols = mask.cols;
             for (let r = 0; r < mask.rows; r++) {
-                for (let c = 0; c < mask.cols; c++) {
+                let rowOffset = r * cols;
+                for (let c = 0; c < cols; c++) {
                     if (r >= ry && r < ry + rh && c >= rx && c < rx + rw) {
-                        mask.ucharWrite(r, c, cv.GC_PR_FGD); // Probably Foreground (3)
+                        maskData[rowOffset + c] = cv.GC_PR_FGD; // Probably Foreground (3)
                     } else {
-                        mask.ucharWrite(r, c, cv.GC_BGD); // Background (0)
+                        maskData[rowOffset + c] = cv.GC_BGD; // Background (0)
                     }
                 }
             }
@@ -871,23 +879,27 @@
             // Create Transparent Output Mat
             let dst = new cv.Mat(src.rows, src.cols, cv.CV_8UC4);
 
-            // Map mask values back to transparency channel
-            for (let r = 0; r < mask.rows; r++) {
-                for (let c = 0; c < mask.cols; c++) {
-                    let maskVal = mask.ucharAt(r, c);
-                    let pixel = src.ucharPtr(r, c);
-                    
-                    if (maskVal === cv.GC_FGD || maskVal === cv.GC_PR_FGD) {
-                        dst.ucharPtr(r, c)[0] = pixel[0]; // R
-                        dst.ucharPtr(r, c)[1] = pixel[1]; // G
-                        dst.ucharPtr(r, c)[2] = pixel[2]; // B
-                        dst.ucharPtr(r, c)[3] = 255;      // A (Opaque)
-                    } else {
-                        dst.ucharPtr(r, c)[0] = 0;
-                        dst.ucharPtr(r, c)[1] = 0;
-                        dst.ucharPtr(r, c)[2] = 0;
-                        dst.ucharPtr(r, c)[3] = 0;        // A (Transparent)
-                    }
+            // Map mask values back to transparency channel (Optimized using TypedArray)
+            let srcData = src.data;
+            let dstData = dst.data;
+            let channels = src.channels();
+            let totalPixels = src.rows * cols;
+
+            for (let i = 0; i < totalPixels; i++) {
+                let maskVal = maskData[i];
+                let srcIdx = i * channels;
+                let dstIdx = i * 4;
+                
+                if (maskVal === cv.GC_FGD || maskVal === cv.GC_PR_FGD) {
+                    dstData[dstIdx] = srcData[srcIdx];         // R
+                    dstData[dstIdx + 1] = srcData[srcIdx + 1]; // G
+                    dstData[dstIdx + 2] = srcData[srcIdx + 2]; // B
+                    dstData[dstIdx + 3] = 255;                 // A (Opaque)
+                } else {
+                    dstData[dstIdx] = 0;
+                    dstData[dstIdx + 1] = 0;
+                    dstData[dstIdx + 2] = 0;
+                    dstData[dstIdx + 3] = 0;                   // A (Transparent)
                 }
             }
 
@@ -921,57 +933,66 @@
             const fgSeeds = state.seeds.filter(s => s.type === 'fg');
             const bgSeeds = state.seeds.filter(s => s.type === 'bg');
 
+            let srcData = src.data;
+            let dstData = dst.data;
+            let channels = src.channels();
+            let cols = src.cols;
+
             // Gather color vectors of all foreground seeds
             const fgColors = fgSeeds.map(p => {
-                const ptr = src.ucharPtr(p.y, p.x);
-                return [ptr[0], ptr[1], ptr[2]];
+                const idx = (p.y * cols + p.x) * channels;
+                return [srcData[idx], srcData[idx + 1], srcData[idx + 2]];
             });
 
             // Gather background seed color vectors
             const bgColors = bgSeeds.map(p => {
-                const ptr = src.ucharPtr(p.y, p.x);
-                return [ptr[0], ptr[1], ptr[2]];
+                const idx = (p.y * cols + p.x) * channels;
+                return [srcData[idx], srcData[idx + 1], srcData[idx + 2]];
             });
 
             const toleranceSq = state.colorTolerance * state.colorTolerance;
+            let totalPixels = src.rows * cols;
 
-            // Pixel-by-pixel Euclidean Color Distance Evaluation
-            for (let r = 0; r < src.rows; r++) {
-                for (let c = 0; c < src.cols; c++) {
-                    const ptr = src.ucharPtr(r, c);
-                    const pr = ptr[0], pg = ptr[1], pb = ptr[2];
+            // Pixel-by-pixel Euclidean Color Distance Evaluation (Optimized using TypedArray)
+            for (let i = 0; i < totalPixels; i++) {
+                const srcIdx = i * channels;
+                const dstIdx = i * 4;
+                const pr = srcData[srcIdx];
+                const pg = srcData[srcIdx + 1];
+                const pb = srcData[srcIdx + 2];
 
-                    // Find minimum distance to any foreground seed color
-                    let minFgDistSq = Infinity;
-                    fgColors.forEach(color => {
-                        const distSq = (pr - color[0])**2 + (pg - color[1])**2 + (pb - color[2])**2;
-                        if (distSq < minFgDistSq) minFgDistSq = distSq;
-                    });
+                // Find minimum distance to any foreground seed color
+                let minFgDistSq = Infinity;
+                for (let j = 0; j < fgColors.length; j++) {
+                    const color = fgColors[j];
+                    const distSq = (pr - color[0])**2 + (pg - color[1])**2 + (pb - color[2])**2;
+                    if (distSq < minFgDistSq) minFgDistSq = distSq;
+                }
 
-                    // Find minimum distance to any background seed color
-                    let minBgDistSq = Infinity;
-                    bgColors.forEach(color => {
-                        const distSq = (pr - color[0])**2 + (pg - color[1])**2 + (pb - color[2])**2;
-                        if (distSq < minBgDistSq) minBgDistSq = distSq;
-                    });
+                // Find minimum distance to any background seed color
+                let minBgDistSq = Infinity;
+                for (let j = 0; j < bgColors.length; j++) {
+                    const color = bgColors[j];
+                    const distSq = (pr - color[0])**2 + (pg - color[1])**2 + (pb - color[2])**2;
+                    if (distSq < minBgDistSq) minBgDistSq = distSq;
+                }
 
-                    // Classify pixel mathematically
-                    let isForeground = minFgDistSq < toleranceSq;
-                    if (bgColors.length > 0 && minBgDistSq < minFgDistSq) {
-                        isForeground = false; // Exclude if mathematically closer to background seed
-                    }
+                // Classify pixel mathematically
+                let isForeground = minFgDistSq < toleranceSq;
+                if (bgColors.length > 0 && minBgDistSq < minFgDistSq) {
+                    isForeground = false; // Exclude if mathematically closer to background seed
+                }
 
-                    if (isForeground) {
-                        dst.ucharPtr(r, c)[0] = pr;
-                        dst.ucharPtr(r, c)[1] = pg;
-                        dst.ucharPtr(r, c)[2] = pb;
-                        dst.ucharPtr(r, c)[3] = 255;
-                    } else {
-                        dst.ucharPtr(r, c)[0] = 0;
-                        dst.ucharPtr(r, c)[1] = 0;
-                        dst.ucharPtr(r, c)[2] = 0;
-                        dst.ucharPtr(r, c)[3] = 0;
-                    }
+                if (isForeground) {
+                    dstData[dstIdx] = pr;
+                    dstData[dstIdx + 1] = pg;
+                    dstData[dstIdx + 2] = pb;
+                    dstData[dstIdx + 3] = 255;
+                } else {
+                    dstData[dstIdx] = 0;
+                    dstData[dstIdx + 1] = 0;
+                    dstData[dstIdx + 2] = 0;
+                    dstData[dstIdx + 3] = 0;
                 }
             }
 
