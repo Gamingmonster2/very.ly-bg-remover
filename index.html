@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" class="dark">
 <head>
@@ -585,7 +583,14 @@
             };
 
             // Safely resolve the background removal function from global scope
-            const removeBackgroundFn = window.imglyBackgroundRemoval || window.backgroundRemoval;
+            let removeBackgroundFn = null;
+            if (typeof imglyBackgroundRemoval !== 'undefined') {
+                removeBackgroundFn = typeof imglyBackgroundRemoval === 'function' ? imglyBackgroundRemoval : imglyBackgroundRemoval.default;
+            } else if (typeof window.backgroundRemoval !== 'undefined') {
+                removeBackgroundFn = typeof window.backgroundRemoval === 'function' ? window.backgroundRemoval : window.backgroundRemoval.default;
+            } else if (window.imglyBackgroundRemoval) {
+                removeBackgroundFn = typeof window.imglyBackgroundRemoval === 'function' ? window.imglyBackgroundRemoval : window.imglyBackgroundRemoval.default;
+            }
 
             if (!removeBackgroundFn) {
                 console.error("Background removal library is not loaded in the global scope.");
