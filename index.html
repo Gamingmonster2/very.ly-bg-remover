@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" class="dark">
 <head>
@@ -12,6 +14,9 @@
     <meta property="og:description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة محلياً داخل متصفحك بشكل آمن تماماً وبأعلى جودة لعام 2026.">
     <meta property="og:type" content="website">
     
+    <!-- Favicon to prevent 404 error -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🟢</text></svg>">
+
     <!-- Google Fonts (Cairo & Plus Jakarta Sans) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -129,7 +134,7 @@
 
         <!-- Main Workspace (Dropzone, Progress, Result Showcase) -->
         <section class="max-w-5xl mx-auto px-4 py-8">
-            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl transition-all duration-300">
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl transition-all duration-300">
                 
                 <!-- 1. Dropzone Area -->
                 <div id="dropzone-container" class="block">
@@ -579,8 +584,18 @@
                 }
             };
 
+            // Safely resolve the background removal function from global scope
+            const removeBackgroundFn = window.imglyBackgroundRemoval || window.backgroundRemoval;
+
+            if (!removeBackgroundFn) {
+                console.error("Background removal library is not loaded in the global scope.");
+                alert("عذراً، لم يتم تحميل مكتبة الذكاء الاصطناعي بشكل كامل بعد أو أن هناك مشكلة في الاتصال. يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.");
+                resetWorkspace();
+                return;
+            }
+
             // Trigger browser-side background removal execution
-            imglyBackgroundRemoval(file, config)
+            removeBackgroundFn(file, config)
                 .then(blob => {
                     processedObjectUrl = URL.createObjectURL(blob);
                     processedImg.src = processedObjectUrl;
