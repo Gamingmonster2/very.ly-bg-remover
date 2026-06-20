@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>أداة إزالة وخلفيات الصور ذكياً - bg.very.ly</title>
+    <meta name="description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة محلياً داخل متصفحك بشكل آمن تماماً وبأعلى جودة لعام 2026.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="أداة إزالة وخلفيات الصور ذكياً - bg.very.ly">
+    <meta property="og:description" content="احذف خلفية أي صورة مجاناً وبضغطة زر واحدة محلياً داخل متصفحك بشكل آمن تماماً وبأعلى جودة لعام 2026.">
+    <meta property="og:type" content="website">
+    
+    <!-- Google Fonts (Cairo & Plus Jakarta Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- @imgly/background-removal CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/bundle.js"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-primary: #10b981; /* Emerald */
+            --color-brand-secondary: #84cc16; /* Olive/Lime */
+            --color-dark-bg: #090d16;
+            --color-dark-card: #111827;
+            --color-light-bg: #f8fafc;
+            --color-light-card: #ffffff;
+        }
+
+        body {
+            font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Checkerboard background for transparent image preview */
+        .checkerboard {
+            background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+                              linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+                              linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+                              linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+        }
+        .dark .checkerboard {
+            background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%),
+                              linear-gradient(-45deg, #1e293b 25%, transparent 25%),
+                              linear-gradient(45deg, transparent 75%, #1e293b 75%),
+                              linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+        }
+
+        /* Ambient glow effects */
+        .glow-sphere {
+            filter: blur(120px);
+            opacity: 0.15;
+            transition: opacity 0.5s ease;
+        }
+        .dark .glow-sphere {
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300 relative overflow-x-hidden">
+
+    <!-- Background Ambient Glows -->
+    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500 glow-sphere pointer-events-none z-0"></div>
+    <div class="absolute bottom-[20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-lime-500 glow-sphere pointer-events-none z-0"></div>
+
+    <!-- Header Section -->
+    <header class="border-b border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md sticky top-0 z-40 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo & Brand -->
+            <a href="/" class="flex items-center gap-3 group" aria-label="الصفحة الرئيسية">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-lime-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.24 15.24a8 8 0 11-11.29-11.29 8 8 0 0111.29 11.29zm0 0l4.76 4.76" />
+                    </svg>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">bg.very.ly</span>
+                    <span class="text-[10px] text-emerald-500 font-semibold tracking-widest uppercase">BG REMOVER</span>
+                </div>
+            </a>
+
+            <!-- Navigation Actions -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <button onclick="openModal('about-modal')" class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50" aria-label="عن الأداة">عن الأداة</button>
+                <button onclick="openModal('privacy-modal')" class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50" aria-label="سياسة الخصوصية">الخصوصية</button>
+                
+                <!-- Divider -->
+                <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
+
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 hover:scale-105 transition-all" aria-label="تغيير المظهر">
+                    <!-- Sun Icon -->
+                    <svg id="theme-sun" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                    </svg>
+                    <!-- Moon Icon -->
+                    <svg id="theme-moon" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="main-content" class="flex-grow z-10">
+        
+        <!-- Hero & Title Section -->
+        <section class="max-w-4xl mx-auto px-4 pt-12 pb-6 text-center">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mb-6 animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                ذكاء اصطناعي محلي 100% - خصوصية مطلقة
+            </div>
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6">
+                احذف خلفية الصور <br class="hidden sm:inline">
+                <span class="bg-gradient-to-r from-emerald-500 to-lime-400 bg-clip-text text-transparent">بضغطة زر واحدة مجاناً</span>
+            </h1>
+            <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                قم بعزل العناصر والأشخاص بدقة فائقة مباشرة داخل متصفحك. لا يتم رفع صورك إلى أي خادم، معالجة آمنة وسريعة بالكامل على جهازك.
+            </p>
+        </section>
+
+        <!-- Main Workspace (Dropzone, Progress, Result Showcase) -->
+        <section class="max-w-5xl mx-auto px-4 py-8">
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl transition-all duration-300">
+                
+                <!-- 1. Dropzone Area -->
+                <div id="dropzone-container" class="block">
+                    <div id="dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500/80 rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-950/30 group relative overflow-hidden">
+                        <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*">
+                        
+                        <div class="relative z-0 pointer-events-none flex flex-col items-center">
+                            <!-- Cloud/Upload SVG Icon -->
+                            <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 dark:text-slate-600 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:scale-110 transition-all duration-300 mb-5 border border-slate-200/50 dark:border-slate-800/50">
+                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg sm:text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">اسحب صورتك هنا أو تصفح ملفاتك</h3>
+                            <p class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-6">يدعم صيغ PNG, JPG, WebP (حتى 15 ميجابايت)</p>
+                            
+                            <span class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-lime-500 text-white font-semibold text-sm shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/30 transition-all">اختيار صورة</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Sample Testing -->
+                    <div class="mt-8 text-center">
+                        <p class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-3">أو جرب إحدى هذه العينات السريعة:</p>
+                        <div class="flex justify-center gap-4 flex-wrap">
+                            <button onclick="loadSample('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80')" class="flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/10 border border-slate-200/60 dark:border-slate-700/30 transition-all group text-right">
+                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-500">بورتريه شخصي</span>
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80" class="w-8 h-8 rounded-lg object-cover" alt="عينة بورتريه" width="32" height="32">
+                            </button>
+                            <button onclick="loadSample('https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80')" class="flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/10 border border-slate-200/60 dark:border-slate-700/30 transition-all group text-right">
+                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-500">منتج وحذاء</span>
+                                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=80&h=80&q=80" class="w-8 h-8 rounded-lg object-cover" alt="عينة منتج" width="32" height="32">
+                            </button>
+                            <button onclick="loadSample('https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80')" class="flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/10 border border-slate-200/60 dark:border-slate-700/30 transition-all group text-right">
+                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-500">حيوان أليف</span>
+                                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=80&h=80&q=80" class="w-8 h-8 rounded-lg object-cover" alt="عينة حيوان" width="32" height="32">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Active AI Processing State -->
+                <div id="processing-container" class="hidden py-12 flex flex-col items-center justify-center text-center">
+                    <div class="relative w-24 h-24 mb-6">
+                        <!-- Dual Ring Pulse Animation -->
+                        <div class="absolute inset-0 rounded-full border-4 border-emerald-500/20 animate-ping"></div>
+                        <div class="absolute inset-2 rounded-full border-4 border-t-emerald-500 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-emerald-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.904-4.473L21 9l-3.482-3.482-7.705 7.705z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.904-4.473L21 9l-3.482-3.482-7.705 7.705z" />
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <h4 id="status-text" class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-3">جاري تهيئة نموذج الذكاء الاصطناعي...</h4>
+                    <p class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 max-w-md mb-6 leading-relaxed">
+                        قد يستغرق التحميل الأولي من دقيقة إلى دقيقتين لتنزيل ملفات الـ WASM وتخزينها محلياً على جهازك. المرات القادمة ستكون فورية!
+                    </p>
+
+                    <!-- Custom Progress Bar -->
+                    <div class="w-full max-w-md bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700/50">
+                        <div id="progress-bar" class="bg-gradient-to-r from-emerald-500 to-lime-400 h-full rounded-full transition-all duration-300" style="width: 5%"></div>
+                    </div>
+                    <span id="progress-percentage" class="text-xs font-bold text-emerald-500 mt-2">5%</span>
+                </div>
+
+                <!-- 3. Result Showcase (Comparison Slider + Actions) -->
+                <div id="result-container" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        
+                        <!-- Interactive Comparison Slider (Left Side / Large) -->
+                        <div class="lg:col-span-8">
+                            <div id="slider-container" class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800/80 cursor-ew-resize select-none">
+                                
+                                <!-- Processed Image (Underlay/Transparent Background) -->
+                                <div class="absolute inset-0 w-full h-full checkerboard flex items-center justify-center">
+                                    <img id="processed-image" class="w-full h-full object-contain" alt="الصورة بدون خلفية">
+                                </div>
+
+                                <!-- Original Image Wrapper (Overlay/Clipped) -->
+                                <div id="slider-original-wrap" class="absolute inset-y-0 right-0 left-1/2 overflow-hidden border-l-2 border-emerald-500">
+                                    <div class="absolute inset-0 w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-900">
+                                        <img id="original-image" class="w-full h-full object-contain" alt="الصورة الأصلية">
+                                    </div>
+                                </div>
+
+                                <!-- Slider Handle/Divider Line -->
+                                <div id="slider-handle" class="absolute inset-y-0 left-1/2 -ml-3.5 w-7 flex items-center justify-center pointer-events-none z-20">
+                                    <div class="h-full w-0.5 bg-emerald-500 shadow-lg"></div>
+                                    <div class="absolute w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md border-2 border-white dark:border-slate-900">
+                                        <svg class="w-4 h-4 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Badges -->
+                                <span class="absolute top-4 right-4 z-30 bg-slate-900/80 text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider">الأصلية</span>
+                                <span class="absolute top-4 left-4 z-30 bg-emerald-500/90 text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider">المعزولة</span>
+                            </div>
+                            <p class="text-xs text-center text-slate-400 dark:text-slate-500 mt-3">اسحب المقبض يميناً ويساراً لمقارنة النتائج بدقة</p>
+                        </div>
+
+                        <!-- Action Controls (Right Side / Sidebar) -->
+                        <div class="lg:col-span-4 flex flex-col gap-4">
+                            <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/60">
+                                <h5 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-2">تم عزل الخلفية بنجاح!</h5>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                                    تمت معالجة الصورة محلياً بجودة كاملة وبصيغة PNG شفافة ومستعدة للتحميل المباشر.
+                                </p>
+                                
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-slate-400">صيغة الملف:</span>
+                                        <span class="font-bold text-emerald-500">PNG (شفاف)</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-slate-400">الأمان والخصوصية:</span>
+                                        <span class="font-bold text-emerald-500">محلي 100%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Download Button -->
+                            <a id="download-btn" href="#" download="transparent.png" class="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-lime-500 text-white font-bold text-base shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all text-center">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                تحميل الصورة المعزولة (PNG)
+                            </a>
+
+                            <!-- Reset Button -->
+                            <button onclick="resetWorkspace()" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-all">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 12H16" />
+                                </svg>
+                                اختيار صورة أخرى
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Features Grid Section -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-2xl sm:text-3xl font-extrabold mb-4">لماذا تختار bg.very.ly لمعالجة صورك؟</h2>
+                <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400">نحن نجمع بين القوة المطلقة للذكاء الاصطناعي والأمان الفائق للعمليات المحلية دون أي خوادم وسيطة.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-emerald-500 mb-6 border border-emerald-500/20">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold mb-3">خصوصية وأمان 100%</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                        تتم معالجة جميع صورك محلياً بالكامل داخل متصفح الإنترنت الخاص بك. لا يتم إرسال أي بايت من بياناتك إلى أي خادم، مما يضمن سرية تامة لملفاتك الحساسة والخاصة.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-emerald-500 mb-6 border border-emerald-500/20">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold mb-3">سرعة فائقة بالذكاء الاصطناعي</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                        نستخدم أحدث تقنيات الويب المتقدمة WebAssembly وعزل النماذج لتشغيل خوارزميات الذكاء الاصطناعي مباشرة على كارت الشاشة أو المعالج الخاص بجهازك لأداء فوري وسلس.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-emerald-500 mb-6 border border-emerald-500/20">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold mb-3">جودة عالية الدقة مجاناً</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                        لا داعي لدفع اشتراكات مكلفة أو استخدام أدوات تضع علامات مائية على صورك. احصل على شفافية كاملة وحواف نظيفة لصورك الشخصية أو منتجات متجرك الإلكتروني مجاناً.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Deep Corporate Footer -->
+    <footer class="bg-slate-100 dark:bg-[#070a11] border-t border-slate-200 dark:border-slate-900 z-10 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                
+                <!-- Brand Info (Left/Right depending on RTL) -->
+                <div class="md:col-span-5 flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-500 to-lime-400 flex items-center justify-center text-white font-bold">bg</div>
+                        <span class="text-lg font-bold text-slate-900 dark:text-white">bg.very.ly</span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">
+                        أداة مفتوحة المصدر لمعالجة وعزل خلفيات الصور بأمان تام وخصوصية مطلقة داخل متصفحك دون إرسال أي بيانات للخارج.
+                    </p>
+                </div>
+
+                <!-- Footer Links -->
+                <div class="md:col-span-4 flex gap-8">
+                    <div>
+                        <h6 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">الروابط السريعة</h6>
+                        <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                            <li><button onclick="openModal('about-modal')" class="hover:text-emerald-500 transition-colors">عن الأداة</button></li>
+                            <li><button onclick="openModal('privacy-modal')" class="hover:text-emerald-500 transition-colors">سياسة الخصوصية والأمان</button></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h6 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">المشروع</h6>
+                        <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                            <li><a href="https://github.com/veryly/very.ly-bg-remover" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-500 transition-colors">مستودع GitHub</a></li>
+                            <li><a href="https://very.ly" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-500 transition-colors">شبكة very.ly</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Copyright Info -->
+                <div class="md:col-span-3 text-left md:text-left text-xs text-slate-500 dark:text-slate-400 flex flex-col gap-2">
+                    <span>جميع الحقوق محفوظة © 2026 bg.very.ly</span>
+                    <span>تطوير وتشغيل آمن بواسطة <a href="https://very.ly" target="_blank" rel="noopener noreferrer" class="text-emerald-500 hover:underline">very.ly</a></span>
+                </div>
+
+            </div>
+        </div>
+    </footer>
+
+    <!-- ABOUT MODAL -->
+    <div id="about-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="closeModal('about-modal')"></div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 relative z-10 shadow-2xl transition-all">
+            <button onclick="closeModal('about-modal')" class="absolute top-4 left-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="إغلاق">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">عن أداة bg.very.ly</h3>
+            <div class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p>
+                    تعتبر أداة <strong>bg.very.ly</strong> حلاً مبتكراً واحترافياً لإزالة خلفيات الصور وعزل العناصر والأشخاص بدقة استثنائية وبشكل مجاني تماماً.
+                </p>
+                <p>
+                    على عكس الأدوات التقليدية التي تتطلب رفع صورك وملفاتك الحساسة إلى خوادم سحابية مجهولة مما يهدد خصوصيتك، تعمل هذه الأداة محلياً 100% داخل متصفحك باستخدام تقنيات <strong>WebAssembly (WASM)</strong> والذكاء الاصطناعي المتقدم لشركة <strong>@imgly/background-removal</strong>.
+                </p>
+                <p>
+                    هذا يعني أن صورتك لا تغادر جهازك (سواء كان هاتفاً ذكياً أو حاسوباً شخصياً) على الإطلاق، وتتم المعالجة باستخدام موارد جهازك الخاصة مما يمنحك سرية تامة وأماناً لا مثيل له.
+                </p>
+            </div>
+            <button onclick="closeModal('about-modal')" class="mt-6 w-full py-2.5 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors">فهمت ذلك</button>
+        </div>
+    </div>
+
+    <!-- PRIVACY MODAL -->
+    <div id="privacy-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="closeModal('privacy-modal')"></div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 relative z-10 shadow-2xl transition-all">
+            <button onclick="closeModal('privacy-modal')" class="absolute top-4 left-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="إغلاق">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-xl font-bold mb-4 text-slate-900 dark:text-white">سياسة الخصوصية والأمان</h3>
+            <div class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div class="p-3 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
+                    تعهد الخصوصية: "0% من بياناتك أو صورك يتم إرسالها أو تخزينها خارج جهازك الشخصي."
+                </div>
+                <p>
+                    نحن في <strong>bg.very.ly</strong> نضع أمان وخصوصية المستخدمين في المقام الأول:
+                </p>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>عدم تخزين الصور:</strong> نحن لا نمتلك خوادم لاستقبال أو تخزين صورك.</li>
+                    <li><strong>معالجة محلية بالكامل:</strong> يتم تشغيل نموذج الذكاء الاصطناعي بالكامل داخل بيئة تشغيل جهازك (Sandbox) بشكل معزول ومحمي.</li>
+                    <li><strong>بدون ملفات تعريف ارتباط ضارة:</strong> لا نقوم بتعقب سلوكياتك أو جمع أي بيانات شخصية على الإطلاق.</li>
+                </ul>
+                <p>
+                    يمكنك استخدام الأداة وأنت في وضع عدم الاتصال بالإنترنت (Offline) تماماً بمجرد تحميل الصفحة لأول مرة، مما يؤكد التزامنا الصارم بالخصوصية المطلقة.
+                </p>
+            </div>
+            <button onclick="closeModal('privacy-modal')" class="mt-6 w-full py-2.5 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors">موافق</button>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT EXECUTION AND STATE LOGIC -->
+    <script>
+        // Theme Management
+        const htmlElement = document.documentElement;
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeSunIcon = document.getElementById('theme-sun');
+        const themeMoonIcon = document.getElementById('theme-moon');
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'dark') {
+                htmlElement.classList.add('dark');
+                themeSunIcon.classList.remove('hidden');
+                themeMoonIcon.classList.add('hidden');
+            } else {
+                htmlElement.classList.remove('dark');
+                themeSunIcon.classList.add('hidden');
+                themeMoonIcon.classList.remove('hidden');
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                themeSunIcon.classList.add('hidden');
+                themeMoonIcon.classList.remove('hidden');
+            } else {
+                htmlElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                themeSunIcon.classList.remove('hidden');
+                themeMoonIcon.classList.add('hidden');
+            }
+        });
+
+        initTheme();
+
+        // Modal Controls
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Workspace elements
+        const dropzoneContainer = document.getElementById('dropzone-container');
+        const processingContainer = document.getElementById('processing-container');
+        const resultContainer = document.getElementById('result-container');
+        const fileInput = document.getElementById('file-input');
+        const dropzone = document.getElementById('dropzone');
+
+        const originalImg = document.getElementById('original-image');
+        const processedImg = document.getElementById('processed-image');
+        const downloadBtn = document.getElementById('download-btn');
+
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const statusText = document.getElementById('status-text');
+
+        // Drag and Drop Events
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('border-emerald-500', 'bg-emerald-500/5');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('border-emerald-500', 'bg-emerald-500/5');
+            }, false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                handleImageProcessing(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleImageProcessing(e.target.files[0]);
+            }
+        });
+
+        // Load Sample Image
+        function loadSample(url) {
+            // Convert URL to Blob to simulate file upload
+            statusText.textContent = "جاري جلب صورة العينة...";
+            dropzoneContainer.classList.add('hidden');
+            processingContainer.classList.remove('hidden');
+            progressBar.style.width = '10%';
+            progressPercentage.textContent = '10%';
+
+            fetch(url)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], "sample.jpg", { type: "image/jpeg" });
+                    handleImageProcessing(file);
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("فشل تحميل عينة الصورة، يرجى التحقق من اتصالك بالإنترنت.");
+                    resetWorkspace();
+                });
+        }
+
+        // Handle Image Processing via imglyBackgroundRemoval
+        let originalObjectUrl = null;
+        let processedObjectUrl = null;
+
+        function handleImageProcessing(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('يرجى اختيار ملف صورة صالح.');
+                return;
+            }
+
+            // Set up views
+            dropzoneContainer.classList.add('hidden');
+            processingContainer.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+
+            // Save original image URL for preview
+            originalObjectUrl = URL.createObjectURL(file);
+            originalImg.src = originalObjectUrl;
+
+            // Configure @imgly/background-removal
+            const config = {
+                publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/',
+                progress: (key, current, total) => {
+                    const percent = Math.round((current / total) * 100);
+                    
+                    // Translate progress keys to Arabic user-friendly status
+                    let arabicStatus = "جاري المعالجة...";
+                    if (key.includes('fetch')) {
+                        arabicStatus = "جاري تحميل نموذج الذكاء الاصطناعي للمتصفح (مرة واحدة فقط)...";
+                    } else if (key.includes('compute')) {
+                        arabicStatus = "جاري عزل الخلفية وتحديد العناصر الذكية...";
+                    }
+
+                    statusText.textContent = arabicStatus;
+                    progressBar.style.width = `${percent}%`;
+                    progressPercentage.textContent = `${percent}%`;
+                }
+            };
+
+            // Trigger browser-side background removal execution
+            imglyBackgroundRemoval(file, config)
+                .then(blob => {
+                    processedObjectUrl = URL.createObjectURL(blob);
+                    processedImg.src = processedObjectUrl;
+
+                    // Configure download button
+                    downloadBtn.href = processedObjectUrl;
+                    
+                    // Generate smart filename
+                    const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || 'image';
+                    downloadBtn.download = `${baseName}_no_bg_very_ly.png`;
+
+                    // Transition to result view
+                    processingContainer.classList.add('hidden');
+                    resultContainer.classList.remove('hidden');
+
+                    // Initialize Comparison Slider
+                    initSlider();
+                })
+                .catch(error => {
+                    console.error("Error processing background removal:", error);
+                    alert("حدث خطأ أثناء معالجة الصورة. قد يكون السبب عدم توافق المتصفح مع WebAssembly أو حجم الصورة الكبير جداً.");
+                    resetWorkspace();
+                });
+        }
+
+        // Reset Workspace
+        function resetWorkspace() {
+            // Revoke URLs to free up memory
+            if (originalObjectUrl) URL.revokeObjectURL(originalObjectUrl);
+            if (processedObjectUrl) URL.revokeObjectURL(processedObjectUrl);
+
+            originalObjectUrl = null;
+            processedObjectUrl = null;
+
+            fileInput.value = '';
+            dropzoneContainer.classList.remove('hidden');
+            processingContainer.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+            progressBar.style.width = '5%';
+            progressPercentage.textContent = '5%';
+            statusText.textContent = "جاري تهيئة نموذج الذكاء الاصطناعي...";
+        }
+
+        // Image Comparison Slider Logic
+        function initSlider() {
+            const container = document.getElementById('slider-container');
+            const originalWrap = document.getElementById('slider-original-wrap');
+            const handle = document.getElementById('slider-handle');
+            if (!container || !originalWrap || !handle) return;
+
+            let isDragging = false;
+
+            // Reset slider position to 50%
+            originalWrap.style.left = '50%';
+            handle.style.left = '50%';
+
+            function setSliderPosition(clientX) {
+                const rect = container.getBoundingClientRect();
+                let position = ((clientX - rect.left) / rect.width) * 100;
+                
+                // Boundaries check
+                if (position < 0) position = 0;
+                if (position > 100) position = 100;
+
+                // Set positions
+                originalWrap.style.left = `${position}%`;
+                handle.style.left = `${position}%`;
+            }
+
+            // Mouse Events
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                setSliderPosition(e.clientX);
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                setSliderPosition(e.clientX);
+            });
+
+            // Touch Events
+            container.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                if (e.touches.length > 0) {
+                    setSliderPosition(e.touches[0].clientX);
+                }
+            });
+
+            window.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                if (e.touches.length > 0) {
+                    setSliderPosition(e.touches[0].clientX);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
