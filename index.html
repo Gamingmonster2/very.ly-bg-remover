@@ -569,12 +569,14 @@
             }, 400);
 
             try {
-                const formData = new FormData();
-                formData.append('image', imageFile);
-
+                // Send the raw binary image directly in the request body,
+                // which is the standard input format expected by Cloudflare Worker AI endpoints.
                 const response = await fetch('https://very.safealigoog.workers.dev', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': imageFile.type
+                    },
+                    body: imageFile
                 });
 
                 if (!response.ok) {
