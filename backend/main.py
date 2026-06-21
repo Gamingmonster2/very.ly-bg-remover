@@ -6,6 +6,17 @@ import io
 
 app = FastAPI()
 
+from fastapi import Header, HTTPException
+
+API_KEY = "my-secret-key-2026"
+
+@app.post("/remove-bg")
+async def remove_bg(file: UploadFile = File(...), x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="مفتاح API غير صالح")
+    
+    # ... بقية كود المعالجة ...
+
 # السماح للواجهة (frontend) بالاتصال بالسيرفر
 app.add_middleware(
     CORSMiddleware,
